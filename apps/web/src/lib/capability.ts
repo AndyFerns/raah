@@ -22,7 +22,14 @@ export type CapabilityBreakdown = {
 };
 
 export function computeCapability(input: {
-  institution: Pick<Institution, "verification_status" | "description" | "website" | "official_domain">;
+  institution: Pick<
+    Institution,
+    | "verification_status"
+    | "description"
+    | "website"
+    | "official_domain"
+    | "website_analyzed_at"
+  >;
   researchAreas: number;
   facultyVerified: number;
   facultyTotal: number;
@@ -33,12 +40,20 @@ export function computeCapability(input: {
 }): CapabilityBreakdown {
   const w = CAPABILITY_WEIGHTS;
 
-  const verification =
+  // Verification score: platform review is the strongest signal, but a
+  // successful website analysis adds a small confidence boost even before
+  // an admin has reviewed the institution.
+  const websiteSignal = input.institution.website_analyzed_at ? 1 : 0;
+  const verificationBase =
     input.institution.verification_status === "verified"
       ? w.verification
       : input.institution.verification_status === "under_review"
         ? Math.round(w.verification * 0.4)
         : 0;
+  const verification = Math.min(
+    w.verification,
+    verificationBase + websiteSignal * 2
+  );
 
   const research = Math.min(input.researchAreas, 5) * (w.research / 5);
   const faculty =
