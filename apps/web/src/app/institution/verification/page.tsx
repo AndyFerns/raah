@@ -32,6 +32,7 @@ export default async function InstitutionVerificationPage() {
     verifs.data?.filter((v) => v.status === "verified").length ?? 0;
 
   const websiteOk = Boolean(institution.website && institution.official_domain);
+  const websiteAnalyzed = Boolean(institution.website_analyzed_at);
   const evidenceOk = (docs.data?.length ?? 0) > 0;
   const facultyOk = facultyVerified > 0;
 
@@ -67,6 +68,15 @@ export default async function InstitutionVerificationPage() {
             label="Faculty affiliation"
             done={facultyOk}
             note={`${facultyVerified} of ${facultyTotal} verified`}
+          />
+          <StatusRow
+            label="Website verification"
+            done={websiteAnalyzed}
+            note={
+              websiteAnalyzed
+                ? "Website analyzed during onboarding"
+                : "Run website analysis from the profile page"
+            }
           />
           <StatusRow
             label="Administrator review"
