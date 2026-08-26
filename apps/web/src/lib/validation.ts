@@ -27,4 +27,5 @@ export const FacultyInviteSchema = z.object({
   designation: z.string().max(120).optional().nullable(),
   department: z.string().max(120).optional().nullable(),
   official_email: z.email(),
+  expertise: z.array(z.string().max(120)).max(20).optional().nullable(),
 });
