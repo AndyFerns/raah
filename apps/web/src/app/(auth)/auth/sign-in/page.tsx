@@ -3,7 +3,14 @@ import { SignInForm } from "./sign-in-form";
 
 export const metadata = { title: "Sign in — Raah" };
 
-export default function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+  const errorMsg = params.error ?? null;
+
   return (
     <div>
       <p className="eyebrow mb-3 flex items-center gap-3">
@@ -16,6 +23,13 @@ export default function SignInPage() {
       <p className="mt-2 text-sm text-muted">
         Use your Raah account, or continue with Google.
       </p>
+
+      {errorMsg && (
+        <div className="mt-6 border border-[color:var(--danger)] bg-[color:var(--surface-3)] p-3 text-sm text-[color:var(--danger)]">
+          {errorMsg}
+        </div>
+      )}
+
       <div className="mt-8">
         <SignInForm />
       </div>
