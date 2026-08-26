@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/auth";
 import { domainFromUrl, slugify } from "@/lib/slug";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { WebsiteAnalysis } from "@/lib/supabase/types";
 import { InstitutionRegistrationSchema } from "@/lib/validation";
+import { analyzeInstitutionWebsite } from "@/lib/website";
 
 function normStr(v: FormDataEntryValue | null): string | null {
   if (v === null) return null;
@@ -21,13 +23,13 @@ export async function registerInstitutionAction(
     name: normStr(formData.get("name")) ?? "",
     type: normStr(formData.get("type")) ?? "",
     institution_code: normStr(formData.get("institution_code")),
-    official_email: normStr(formData.get("official_email")),
-    website: normStr(formData.get("website")),
-    state: normStr(formData.get("state")),
-    district: normStr(formData.get("district")),
-    city: normStr(formData.get("city")),
+    official_email: normStr(formData.get("official_email")) ?? "",
+    website: normStr(formData.get("website")) ?? "",
+    state: normStr(formData.get("state")) ?? "",
+    district: normStr(formData.get("district")) ?? "",
+    city: normStr(formData.get("city")) ?? "",
     address: normStr(formData.get("address")),
-    description: normStr(formData.get("description")),
+    description: normStr(formData.get("description")) ?? "",
   });
 
   if (!parsed.success) {
@@ -83,12 +85,12 @@ export async function registerInstitutionAction(
     institution_id: inserted.id,
     user_id: session.userId,
     role: "admin",
+    status: "active",
   });
   if (memberErr) {
     return { error: memberErr.message };
   }
 
-  // Ensure role is set to institution.
   await supabase
     .from("profiles")
     .update({ role: "institution", onboarded: true })
@@ -96,4 +98,88 @@ export async function registerInstitutionAction(
 
   revalidatePath("/institution");
   return { ok: true, slug: inserted.slug };
+}
+
+export async function searchInstitutionsAction(
+  query: string
+): Promise<
+  | {
+      ok: true;
+      results: {
+        id: string;
+        slug: string;
+        name: string;
+        type: string;
+        city: string | null;
+        district: string | null;
+        verification_status: string;
+      }[];
+    }
+  | { error: string }
+> {
+  await requireSession();
+  const q = query.trim();
+  if (q.length < 2) return { ok: true, results: [] };
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("institutions")
+    .select("id, slug, name, type, city, district, verification_status")
+    .ilike("name", `%${q}%`)
+    .order("verification_status", { ascending: false })
+    .limit(15);
+  if (error) return { error: error.message };
+  return { ok: true, results: data ?? [] };
+}
+
+export async function requestInstitutionMembershipAction(
+  institutionId: string
+): Promise<
+  | { ok: true; status: "pending" | "active" }
+  | { error: string }
+> {
+  const session = await requireSession();
+  const supabase = await createSupabaseServerClient();
+
+  const { data: existing } = await supabase
+    .from("institution_members")
+    .select("status")
+    .eq("institution_id", institutionId)
+    .eq("user_id", session.userId)
+    .maybeSingle();
+
+  if (existing) {
+    return { ok: true, status: existing.status as "pending" | "active" };
+  }
+
+  const { error } = await supabase.from("institution_members").insert({
+    institution_id: institutionId,
+    user_id: session.userId,
+    role: "member",
+    status: "pending",
+  });
+  if (error) return { error: error.message };
+
+  await supabase
+    .from("profiles")
+    .update({ role: "institution", onboarded: true })
+    .eq("id", session.userId);
+
+  revalidatePath("/institution");
+  revalidatePath("/onboarding/institution");
+  return { ok: true, status: "pending" };
+}
+
+export async function analyzeInstitutionWebsiteAction(
+  websiteUrl: string,
+  consent: boolean
+): Promise<{ ok: true; analysis: WebsiteAnalysis } | { error: string }> {
+  await requireSession();
+  if (!consent) {
+    return { error: "Consent is required before analyzing the website." };
+  }
+  if (!websiteUrl || websiteUrl.trim().length < 4) {
+    return { error: "Provide a website URL to analyze." };
+  }
+  const analysis = await analyzeInstitutionWebsite(websiteUrl.trim());
+  return { ok: true, analysis };
 }
