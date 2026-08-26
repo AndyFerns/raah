@@ -32,11 +32,17 @@ export async function addFacultyAction(
   formData: FormData
 ): Promise<{ ok: true; id: string } | { error: string }> {
   const supabase = await assertInstitutionAdmin(institutionId);
+  const expertiseRaw = s(formData.get("expertise"));
+  const expertise = expertiseRaw
+    ? expertiseRaw.split(",").map((e) => e.trim()).filter(Boolean)
+    : null;
+
   const parsed = FacultyInviteSchema.safeParse({
     full_name: s(formData.get("full_name")) ?? "",
     designation: s(formData.get("designation")),
     department: s(formData.get("department")),
     official_email: s(formData.get("official_email")) ?? "",
+    expertise,
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid data" };
@@ -50,6 +56,7 @@ export async function addFacultyAction(
       designation: parsed.data.designation ?? null,
       department: parsed.data.department ?? null,
       official_email: parsed.data.official_email.toLowerCase(),
+      expertise: parsed.data.expertise ?? null,
     })
     .select("id")
     .single();

@@ -55,6 +55,15 @@ export function AddFacultyForm({
         <Field label="Department" htmlFor="department">
           <Input id="department" name="department" />
         </Field>
+        <div className="md:col-span-2">
+          <Field label="Expertise / research areas" htmlFor="expertise">
+            <Input
+              id="expertise"
+              name="expertise"
+              placeholder="AI, Water Resources, IoT (comma-separated)"
+            />
+          </Field>
+        </div>
       </div>
       {!institutionDomain && (
         <p className="mb-4 text-xs text-[color:var(--warning)]">
