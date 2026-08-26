@@ -82,7 +82,8 @@ export async function addListItemAction(
   institutionId: string,
   kind: ListKind,
   label: string,
-  sub?: string
+  sub?: string,
+  facilityType?: string
 ): Promise<{ ok: true } | { error: string }> {
   if (!label.trim()) return { error: "Value required" };
   const supabase = await assertInstitutionAdmin(institutionId);
@@ -91,8 +92,9 @@ export async function addListItemAction(
     institution_id: institutionId,
     [conf.textCol]: label.trim(),
   };
-  if (kind === "facilities" && sub) {
-    row.description = sub.trim();
+  if (kind === "facilities") {
+    if (sub) row.description = sub.trim();
+    if (facilityType) row.facility_type = facilityType;
   }
   const { error } = await supabase.from(conf.table).insert(row);
   if (error) return { error: error.message };
