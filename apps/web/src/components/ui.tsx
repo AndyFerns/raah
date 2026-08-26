@@ -9,19 +9,22 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "accent2";
 
 const baseButton =
   "inline-flex items-center justify-center gap-2 h-10 px-4 text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "bg-foreground text-background border-foreground hover:bg-neutral-800",
+    "bg-[color:var(--accent)] text-white border-[color:var(--accent)] hover:bg-[color:var(--accent-hover)]",
   secondary:
     "bg-background text-foreground border-border-strong hover:bg-surface",
-  ghost: "bg-transparent text-foreground border-transparent hover:bg-surface",
+  ghost:
+    "bg-transparent text-foreground border-transparent hover:bg-surface",
   danger:
-    "bg-background text-[color:var(--danger)] border-[color:var(--danger)] hover:bg-red-50",
+    "bg-background text-[color:var(--danger)] border-[color:var(--danger)] hover:bg-[color:var(--surface-3)]",
+  accent2:
+    "bg-[color:var(--accent-2)] text-white border-[color:var(--accent-2)] hover:opacity-90",
 };
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -77,7 +80,7 @@ export function Input({ className = "", ...rest }: InputHTMLAttributes<HTMLInput
   return (
     <input
       {...rest}
-      className={`w-full h-10 px-3 border border-border bg-background text-foreground text-sm focus:border-foreground focus:outline-none ${className}`}
+      className={`w-full h-10 px-3 border border-border bg-background text-foreground text-sm focus:border-[color:var(--accent)] focus:outline-none ${className}`}
     />
   );
 }
@@ -89,7 +92,7 @@ export function Textarea({
   return (
     <textarea
       {...rest}
-      className={`w-full min-h-24 p-3 border border-border bg-background text-foreground text-sm focus:border-foreground focus:outline-none ${className}`}
+      className={`w-full min-h-24 p-3 border border-border bg-background text-foreground text-sm focus:border-[color:var(--accent)] focus:outline-none ${className}`}
     />
   );
 }
@@ -101,7 +104,7 @@ export function Select({
   return (
     <select
       {...rest}
-      className={`w-full h-10 px-2 border border-border bg-background text-foreground text-sm focus:border-foreground focus:outline-none ${className}`}
+      className={`w-full h-10 px-2 border border-border bg-background text-foreground text-sm focus:border-[color:var(--accent)] focus:outline-none ${className}`}
     />
   );
 }
@@ -185,38 +188,45 @@ export function StatusPill({
   const map: Record<string, { label: string; className: string }> = {
     pending: {
       label: "Pending",
-      className: "border-border text-muted",
+      className: "border-border text-muted bg-surface",
     },
     under_review: {
       label: "Under Review",
-      className: "border-[color:var(--warning)] text-[color:var(--warning)]",
+      className:
+        "border-[color:var(--warning)] text-[color:var(--warning)] bg-[color:var(--surface-3)]",
     },
     verified: {
       label: "Verified",
-      className: "border-[color:var(--success)] text-[color:var(--success)]",
+      className:
+        "border-[color:var(--success)] text-[color:var(--success)] bg-[color:var(--accent-2-soft)]",
     },
     rejected: {
       label: "Rejected",
-      className: "border-[color:var(--danger)] text-[color:var(--danger)]",
+      className:
+        "border-[color:var(--danger)] text-[color:var(--danger)] bg-[color:var(--surface-3)]",
     },
     suspended: {
       label: "Suspended",
-      className: "border-[color:var(--danger)] text-[color:var(--danger)]",
+      className:
+        "border-[color:var(--danger)] text-[color:var(--danger)] bg-[color:var(--surface-3)]",
     },
     sent: {
       label: "Sent",
-      className: "border-border-strong text-foreground",
+      className: "border-border-strong text-foreground bg-surface",
     },
     expired: {
       label: "Expired",
-      className: "border-border text-muted",
+      className: "border-border text-muted bg-surface",
     },
     revoked: {
       label: "Revoked",
-      className: "border-border text-muted",
+      className: "border-border text-muted bg-surface",
     },
   };
-  const item = map[status] ?? { label: status, className: "border-border text-muted" };
+  const item = map[status] ?? {
+    label: status,
+    className: "border-border text-muted bg-surface",
+  };
   return (
     <span
       className={`inline-flex items-center h-6 px-2 text-[11px] uppercase tracking-wider border ${item.className}`}
@@ -229,12 +239,22 @@ export function StatusPill({
 export function Card({
   children,
   className = "",
+  tone,
 }: {
   children: ReactNode;
   className?: string;
+  tone?: "warm" | "sage" | "blush" | "default";
 }) {
+  const toneClass =
+    tone === "warm"
+      ? "bg-surface"
+      : tone === "sage"
+        ? "bg-[color:var(--surface-2)]"
+        : tone === "blush"
+          ? "bg-[color:var(--surface-3)]"
+          : "bg-background";
   return (
-    <div className={`border border-border bg-background ${className}`}>
+    <div className={`border border-border ${toneClass} ${className}`}>
       {children}
     </div>
   );
@@ -248,7 +268,7 @@ export function EmptyState({
   description?: string;
 }) {
   return (
-    <div className="border border-dashed border-border p-8 text-center">
+    <div className="border border-dashed border-border-strong bg-surface p-8 text-center">
       <p className="text-sm font-medium text-foreground">{title}</p>
       {description && (
         <p className="mt-1 text-sm text-muted">{description}</p>
