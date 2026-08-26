@@ -61,8 +61,26 @@ export type Institution = {
   verification_status: VerificationStatus;
   verified_at: string | null;
   created_by: string | null;
+  website_analyzed_at: string | null;
+  website_analysis: WebsiteAnalysis | null;
   created_at: string;
   updated_at: string;
+};
+
+export type MembershipStatus = "active" | "pending";
+
+export type WebsiteAnalysis = {
+  source_url: string;
+  fetched_at: string;
+  ok: boolean;
+  detected: {
+    title?: string | null;
+    description?: string | null;
+    address_hint?: string | null;
+    departments?: string[];
+    keywords?: string[];
+  };
+  notes?: string | null;
 };
 
 export type Faculty = {
