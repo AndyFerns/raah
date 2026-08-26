@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { GoogleButton } from "@/components/google-button";
 import { Button, Field, Input } from "@/components/ui";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { AppRole } from "@/lib/supabase/types";
@@ -30,15 +31,20 @@ export function RegisterForm({
               key={opt.value}
               type="button"
               onClick={() => setRole(opt.value)}
-              className="w-full text-left py-4 flex items-start justify-between gap-6 hover:bg-surface px-1"
+              className="w-full text-left py-4 flex items-start justify-between gap-6 hover:bg-surface px-2 group"
             >
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  {opt.label}
-                </p>
-                <p className="text-sm text-muted">{opt.description}</p>
+              <div className="flex items-start gap-3">
+                <span className="mt-2 h-0.5 w-6 bg-[color:var(--accent)] opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {opt.label}
+                  </p>
+                  <p className="text-sm text-muted">{opt.description}</p>
+                </div>
               </div>
-              <span className="text-sm text-muted mt-0.5">Select</span>
+              <span className="text-sm text-[color:var(--accent)] mt-0.5">
+                Select
+              </span>
             </button>
           ))}
         </div>
@@ -50,6 +56,19 @@ export function RegisterForm({
     roleOptions.find((r) => r.value === role)?.label ?? role;
 
   return (
+    <div>
+      <p className="eyebrow mb-4">Step 2 of 2 — {selectedLabel}</p>
+      <GoogleButton
+        label="Continue with Google"
+        next={role === "institution" ? "/onboarding/institution" : "/account"}
+      />
+      <div className="my-6 flex items-center gap-3">
+        <span className="flex-1 h-px bg-border" />
+        <span className="text-[11px] uppercase tracking-widest text-muted-2">
+          or use email
+        </span>
+        <span className="flex-1 h-px bg-border" />
+      </div>
     <form
       onSubmit={(e) => {
         e.preventDefault();
@@ -89,7 +108,6 @@ export function RegisterForm({
         });
       }}
     >
-      <p className="eyebrow mb-4">Step 2 of 2 — {selectedLabel}</p>
       <Field label="Full name" htmlFor="fullName">
         <Input id="fullName" name="fullName" required />
       </Field>
@@ -122,5 +140,6 @@ export function RegisterForm({
         </button>
       </div>
     </form>
+    </div>
   );
 }
