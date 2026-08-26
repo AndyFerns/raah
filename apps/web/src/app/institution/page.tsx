@@ -73,7 +73,8 @@ export default async function InstitutionDashboardPage() {
       </div>
 
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-6">
+        <Card tone="blush" className="lg:col-span-2 p-6">
+          <div className="h-0.5 w-10 bg-[color:var(--accent)] mb-4" />
           <p className="eyebrow mb-3">Institution capability</p>
           <div className="flex items-baseline gap-3">
             <p className="text-5xl font-semibold tracking-tight tabular-nums">
@@ -113,7 +114,8 @@ export default async function InstitutionDashboardPage() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="p-6">
+          <Card tone="sage" className="p-6">
+            <div className="h-0.5 w-8 bg-[color:var(--accent-2)] mb-4" />
             <p className="eyebrow mb-3">At a glance</p>
             <dl className="grid grid-cols-2 gap-y-4 text-sm">
               <dt className="text-muted">Departments</dt>
@@ -129,7 +131,7 @@ export default async function InstitutionDashboardPage() {
             </dl>
           </Card>
 
-          <Card className="p-6">
+          <Card tone="warm" className="p-6">
             <p className="eyebrow mb-3">Matched challenges</p>
             <EmptyState
               title="No challenges assigned yet."
@@ -143,7 +145,7 @@ export default async function InstitutionDashboardPage() {
             </Link>
           </Card>
 
-          <Card className="p-6">
+          <Card tone="warm" className="p-6">
             <p className="eyebrow mb-3">Active projects</p>
             <EmptyState title="No active projects yet." />
           </Card>
