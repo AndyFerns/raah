@@ -70,36 +70,41 @@ export default async function PublicInstitutionPage({
   });
 
   return (
+    <>
+    <section className="border-b border-border bg-[color:var(--surface-2)]">
+      <Container className="py-10 max-w-5xl">
+        <div className="h-0.5 w-10 bg-[color:var(--accent-2)] mb-6" />
+        <p className="text-xs uppercase tracking-widest text-muted">
+          {INSTITUTION_TYPE_LABEL[institution.type]}
+        </p>
+        <h1 className="mt-2 text-4xl md:text-5xl font-semibold tracking-tight">
+          {institution.name}
+        </h1>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {institution.verification_status === "verified" && (
+            <StatusPill status="verified" />
+          )}
+          <span className="text-sm text-muted">
+            {[institution.city, institution.district, institution.state]
+              .filter(Boolean)
+              .join(", ")}
+          </span>
+          {institution.website && (
+            <a
+              href={institution.website}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-[color:var(--accent)] underline underline-offset-4"
+            >
+              Official website
+            </a>
+          )}
+        </div>
+      </Container>
+    </section>
     <Container className="py-14 max-w-5xl">
-      <p className="eyebrow mb-3">
-        {INSTITUTION_TYPE_LABEL[institution.type]}
-      </p>
-      <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">
-        {institution.name}
-      </h1>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        {institution.verification_status === "verified" && (
-          <StatusPill status="verified" />
-        )}
-        <span className="text-sm text-muted">
-          {[institution.city, institution.district, institution.state]
-            .filter(Boolean)
-            .join(", ")}
-        </span>
-        {institution.website && (
-          <a
-            href={institution.website}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm underline underline-offset-4"
-          >
-            Official website
-          </a>
-        )}
-      </div>
-
       {institution.description && (
-        <div className="mt-10 max-w-3xl">
+        <div className="max-w-3xl">
           <p className="eyebrow mb-3">About</p>
           <p className="text-base leading-relaxed text-foreground">
             {institution.description}
@@ -160,7 +165,8 @@ export default async function PublicInstitutionPage({
           </div>
         </Card>
 
-        <Card className="p-6 h-fit">
+        <Card tone="blush" className="p-6 h-fit">
+          <div className="h-0.5 w-8 bg-[color:var(--accent)] mb-4" />
           <p className="eyebrow mb-3">Institution capability</p>
           <div className="flex items-baseline gap-2">
             <p className="text-5xl font-semibold tabular-nums">
@@ -174,6 +180,7 @@ export default async function PublicInstitutionPage({
         </Card>
       </div>
     </Container>
+    </>
   );
 }
 
@@ -188,7 +195,7 @@ function ListBlock({ title, items }: { title: string; items: string[] }) {
           {items.map((item) => (
             <li
               key={item}
-              className="text-xs border border-border px-2 py-1"
+              className="text-xs border border-border bg-background px-2 py-1"
             >
               {item}
             </li>
