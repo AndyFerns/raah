@@ -79,17 +79,24 @@ export function RegisterForm({
         const fullName = String(form.get("fullName") ?? "");
         start(async () => {
           const supabase = createSupabaseBrowserClient();
+          const base =
+            typeof window !== "undefined" ? window.location.origin : "";
+          const nextPath =
+            role === "institution" ? "/onboarding/institution" : "/account";
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            options: { data: { full_name: fullName } },
+            options: {
+              data: { full_name: fullName, requested_role: role },
+              emailRedirectTo: `${base}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+            },
           });
           if (error) {
             setError(error.message);
             return;
           }
           const userId = data.user?.id;
-          if (userId) {
+          if (userId && data.session) {
             await supabase
               .from("profiles")
               .update({ role, full_name: fullName })
@@ -99,11 +106,7 @@ export function RegisterForm({
             router.push("/auth/sign-in?confirm=1");
             return;
           }
-          if (role === "institution") {
-            router.push("/onboarding/institution");
-          } else {
-            router.push("/account");
-          }
+          router.push(nextPath);
           router.refresh();
         });
       }}
