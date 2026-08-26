@@ -1,14 +1,15 @@
 import { Card, Container, StatusPill } from "@/components/ui";
 import { requireInstitutionMembership } from "@/lib/institution";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { APP_URL } from "@/lib/supabase/env";
 import { AddFacultyForm } from "./add-form";
 import { FacultyRow } from "./faculty-row";
+import { PendingRequests } from "./pending-requests";
 
 export const metadata = { title: "People — Raah" };
 
 export default async function InstitutionPeoplePage() {
-  const { institution } = await requireInstitutionMembership();
+  const { institution, isAdminMember } = await requireInstitutionMembership();
   const supabase = await createSupabaseServerClient();
 
   const { data: faculty } = await supabase
@@ -34,6 +35,30 @@ export default async function InstitutionPeoplePage() {
     if (!latestByFaculty.has(v.faculty_id)) latestByFaculty.set(v.faculty_id, v);
   }
 
+  // Pending join requests (admins only).
+  let pendingRows: { user_id: string; full_name: string | null; email: string | null }[] = [];
+  if (isAdminMember) {
+    const { data: pending } = await supabase
+      .from("institution_members")
+      .select("user_id, profiles(full_name)")
+      .eq("institution_id", institution.id)
+      .eq("status", "pending");
+    if (pending && pending.length > 0) {
+      const admin = createSupabaseServiceRoleClient();
+      const rows: typeof pendingRows = [];
+      for (const p of pending) {
+        const { data: authUser } = await admin.auth.admin.getUserById(p.user_id);
+        rows.push({
+          user_id: p.user_id,
+          full_name:
+            (p.profiles as unknown as { full_name?: string | null })?.full_name ?? null,
+          email: authUser.user?.email ?? null,
+        });
+      }
+      pendingRows = rows;
+    }
+  }
+
   return (
     <Container className="py-14 max-w-4xl">
       <p className="eyebrow mb-3">People</p>
@@ -44,7 +69,14 @@ export default async function InstitutionPeoplePage() {
         send an affiliation verification link.
       </p>
 
-      <Card className="mt-8 p-6">
+      {isAdminMember && (
+        <Card className="mt-8 p-6">
+          <p className="eyebrow mb-4">Join requests</p>
+          <PendingRequests institutionId={institution.id} initial={pendingRows} />
+        </Card>
+      )}
+
+      <Card className="mt-6 p-6">
         <p className="eyebrow mb-4">Roster</p>
         <ul className="divide-y divide-border border-y border-border">
           {(faculty ?? []).length === 0 && (
