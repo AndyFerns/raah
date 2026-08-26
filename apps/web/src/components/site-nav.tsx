@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { RaahMark } from "./mark";
 import { SignOutButton } from "./sign-out-button";
 import { Container } from "./ui";
 
@@ -31,13 +32,14 @@ export async function SiteNav() {
   }
 
   return (
-    <header className="border-b border-border bg-background">
+    <header className="border-b border-border bg-background/80 backdrop-blur-[1px] sticky top-0 z-40">
       <Container className="flex h-16 items-center justify-between">
         <Link
           href="/"
-          className="text-lg font-semibold tracking-tight text-foreground"
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground"
         >
-          RAAH
+          <RaahMark size={22} />
+          <span>Raah</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm">
           {publicNav.map((item) => (
@@ -61,7 +63,7 @@ export async function SiteNav() {
               </Link>
               <Link
                 href="/auth/register"
-                className="inline-flex items-center h-9 px-4 text-sm font-medium border border-foreground bg-foreground text-background hover:bg-neutral-800"
+                className="inline-flex items-center h-9 px-4 text-sm font-medium border border-[color:var(--accent)] bg-[color:var(--accent)] text-white hover:bg-[color:var(--accent-hover)]"
               >
                 Get started
               </Link>
@@ -91,7 +93,7 @@ export async function SiteNav() {
         </div>
       </Container>
       {session?.profile.role === "institution" && (
-        <div className="border-t border-border bg-surface">
+        <div className="border-t border-border bg-[color:var(--surface-2)]">
           <Container className="flex h-11 items-center gap-6 text-sm">
             <Link href="/institution" className="text-foreground hover:text-muted">
               Overview
@@ -128,11 +130,14 @@ export async function SiteNav() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-border">
+    <footer className="mt-24 border-t border-border bg-[color:var(--surface)]">
       <Container className="py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-sm text-muted">
-        <div>
-          <p className="text-foreground font-medium">Raah</p>
-          <p className="mt-1">Finding a Pathway for Societal Challenges</p>
+        <div className="flex items-start gap-3">
+          <RaahMark size={22} tone="accent" />
+          <div>
+            <p className="text-foreground font-medium">Raah</p>
+            <p className="mt-1">Finding a Pathway for Societal Challenges</p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-6">
           <Link href="/about" className="hover:text-foreground">
