@@ -72,8 +72,24 @@ export type Faculty = {
   designation: string | null;
   department: string | null;
   official_email: string;
+  expertise: string[] | null;
   user_id: string | null;
   created_at: string;
+};
+
+export type FacilityType =
+  | "facility"
+  | "laboratory"
+  | "research_centre"
+  | "incubation_centre"
+  | "innovation_centre";
+
+export const FACILITY_TYPE_LABEL: Record<FacilityType, string> = {
+  facility: "Facility",
+  laboratory: "Laboratory",
+  research_centre: "Research Centre",
+  incubation_centre: "Incubation Centre",
+  innovation_centre: "Innovation Centre",
 };
 
 export type FacultyVerification = {
