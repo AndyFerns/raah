@@ -1,11 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Button, Input } from "@/components/ui";
+import { Button, Input, Select } from "@/components/ui";
 import { addListItemAction, removeListItemAction } from "./actions";
 
 type Item = { id: string; label: string; sub?: string };
 type Kind = "departments" | "research_areas" | "capabilities" | "facilities";
+
+const FACILITY_TYPES = [
+  { value: "facility", label: "Facility" },
+  { value: "laboratory", label: "Laboratory" },
+  { value: "research_centre", label: "Research Centre" },
+  { value: "incubation_centre", label: "Incubation Centre" },
+  { value: "innovation_centre", label: "Innovation Centre" },
+];
 
 export function ListManager({
   kind,
@@ -20,6 +28,7 @@ export function ListManager({
 }) {
   const [value, setValue] = useState("");
   const [sub, setSub] = useState("");
+  const [facilityType, setFacilityType] = useState("facility");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -58,11 +67,23 @@ export function ListManager({
           placeholder={placeholder}
         />
         {kind === "facilities" && (
-          <Input
-            value={sub}
-            onChange={(e) => setSub(e.target.value)}
-            placeholder="Short description (optional)"
-          />
+          <>
+            <Select
+              value={facilityType}
+              onChange={(e) => setFacilityType(e.target.value)}
+            >
+              {FACILITY_TYPES.map((ft) => (
+                <option key={ft.value} value={ft.value}>
+                  {ft.label}
+                </option>
+              ))}
+            </Select>
+            <Input
+              value={sub}
+              onChange={(e) => setSub(e.target.value)}
+              placeholder="Short description (optional)"
+            />
+          </>
         )}
         <Button
           type="button"
@@ -75,12 +96,14 @@ export function ListManager({
                 institutionId,
                 kind,
                 value,
-                sub || undefined
+                sub || undefined,
+                kind === "facilities" ? facilityType : undefined
               );
               if ("error" in res) setError(res.error);
               else {
                 setValue("");
                 setSub("");
+                setFacilityType("facility");
               }
             })
           }
