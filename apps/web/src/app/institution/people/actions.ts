@@ -66,6 +66,37 @@ export async function addFacultyAction(
   return { ok: true, id: data.id };
 }
 
+export async function approveMembershipAction(
+  institutionId: string,
+  userId: string
+): Promise<{ ok: true } | { error: string }> {
+  const supabase = await assertInstitutionAdmin(institutionId);
+  const { error } = await supabase
+    .from("institution_members")
+    .update({ status: "active" })
+    .eq("institution_id", institutionId)
+    .eq("user_id", userId);
+  if (error) return { error: error.message };
+  revalidatePath("/institution/people");
+  return { ok: true };
+}
+
+export async function rejectMembershipAction(
+  institutionId: string,
+  userId: string
+): Promise<{ ok: true } | { error: string }> {
+  const supabase = await assertInstitutionAdmin(institutionId);
+  const { error } = await supabase
+    .from("institution_members")
+    .delete()
+    .eq("institution_id", institutionId)
+    .eq("user_id", userId)
+    .eq("status", "pending");
+  if (error) return { error: error.message };
+  revalidatePath("/institution/people");
+  return { ok: true };
+}
+
 export async function removeFacultyAction(
   institutionId: string,
   facultyId: string

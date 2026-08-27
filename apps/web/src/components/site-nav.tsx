@@ -24,6 +24,7 @@ export async function SiteNav() {
       .from("institution_members")
       .select("institution_id, institutions(slug)")
       .eq("user_id", session.userId)
+      .eq("status", "active")
       .limit(1)
       .maybeSingle();
     const inst = (data as unknown as { institutions?: { slug?: string } | null })

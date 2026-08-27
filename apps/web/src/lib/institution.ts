@@ -14,8 +14,9 @@ export async function requireInstitutionMembership(): Promise<InstitutionContext
 
   const { data: membership } = await supabase
     .from("institution_members")
-    .select("role, institutions(*)")
+    .select("role, status, institutions(*)")
     .eq("user_id", session.userId)
+    .eq("status", "active")
     .limit(1)
     .maybeSingle();
 
