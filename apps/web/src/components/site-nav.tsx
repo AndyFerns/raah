@@ -14,8 +14,14 @@ const publicNav: NavItem[] = [
   { href: "/about", label: "About" },
 ];
 
+const INDUSTRY_ROLES = new Set(["industry", "csr", "research_org"]);
+
 export async function SiteNav() {
   const session = await getSession();
+
+  const isIndustry = session
+    ? INDUSTRY_ROLES.has(session.profile.role)
+    : false;
 
   let institutionSlug: string | null = null;
   if (session?.profile.role === "institution") {
@@ -78,7 +84,9 @@ export async function SiteNav() {
                     ? "/admin"
                     : session.profile.role === "institution"
                       ? "/institution"
-                      : "/account"
+                      : isIndustry
+                        ? "/industry"
+                        : "/account"
                 }
                 className="text-sm text-foreground hover:text-muted"
               >
@@ -86,13 +94,39 @@ export async function SiteNav() {
                   ? "Admin"
                   : session.profile.role === "institution"
                     ? "Institution"
-                    : "Account"}
+                    : isIndustry
+                      ? "Industry"
+                      : "Account"}
               </Link>
               <SignOutButton />
             </>
           )}
         </div>
       </Container>
+      {isIndustry && (
+        <div className="border-t border-border bg-[color:var(--surface-2)]">
+          <Container className="flex h-11 items-center gap-6 text-sm">
+            <Link href="/industry" className="text-foreground hover:text-muted">
+              Overview
+            </Link>
+            <Link
+              href="/industry/interests"
+              className="text-foreground hover:text-muted"
+            >
+              Interests
+            </Link>
+            <Link href="/projects" className="text-foreground hover:text-muted">
+              Projects
+            </Link>
+            <Link
+              href="/institutions"
+              className="text-foreground hover:text-muted"
+            >
+              Institutions
+            </Link>
+          </Container>
+        </div>
+      )}
       {session?.profile.role === "institution" && (
         <div className="border-t border-border bg-[color:var(--surface-2)]">
           <Container className="flex h-11 items-center gap-6 text-sm">

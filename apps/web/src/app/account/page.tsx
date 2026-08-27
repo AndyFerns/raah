@@ -14,6 +14,13 @@ export default async function AccountPage() {
   if (session.profile.role === "institution") {
     redirect("/institution");
   }
+  if (
+    session.profile.role === "industry" ||
+    session.profile.role === "csr" ||
+    session.profile.role === "research_org"
+  ) {
+    redirect("/industry");
+  }
 
   const supabase = await createSupabaseServerClient();
   const { data: memberships } = await supabase
