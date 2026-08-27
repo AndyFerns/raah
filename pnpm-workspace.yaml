@@ -2,3 +2,7 @@ packages:
   - "apps/*"
 allowBuilds:
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - expo-image-picker@57.0.14
+  - expo-location@57.0.14
+nodeLinker: hoisted
