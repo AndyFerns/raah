@@ -416,3 +416,692 @@ create policy "verif-docs delete own" on storage.objects
     bucket_id = 'verification-documents'
     and (is_platform_admin() or is_institution_admin(((split_part(name, '/', 1))::uuid)))
   );
+
+  -- ============================================================
+-- RAAH CITIZEN ISSUE SYSTEM
+-- Add this AFTER the existing initial schema
+-- ============================================================
+
+set search_path = public;
+
+
+-- ============================================================
+-- ENUMS
+-- ============================================================
+
+do $$
+begin
+  create type issue_status as enum (
+    'reported',
+    'acknowledged',
+    'in_progress',
+    'resolved',
+    'rejected',
+    'closed'
+  );
+exception
+  when duplicate_object then null;
+end $$;
+
+
+do $$
+begin
+  create type issue_category as enum (
+    'roads',
+    'water',
+    'sanitation',
+    'electricity',
+    'street_lighting',
+    'drainage',
+    'public_safety',
+    'environment',
+    'public_property',
+    'other'
+  );
+exception
+  when duplicate_object then null;
+end $$;
+
+
+do $$
+begin
+  create type media_type as enum (
+    'image',
+    'video'
+  );
+exception
+  when duplicate_object then null;
+end $$;
+
+
+-- ============================================================
+-- ISSUES
+-- ============================================================
+
+create table if not exists issues (
+  id uuid primary key default gen_random_uuid(),
+
+  user_id uuid not null
+    references auth.users(id)
+    on delete cascade,
+
+  title text not null
+    check (char_length(title) between 3 and 150),
+
+  description text
+    check (
+      description is null
+      or char_length(description) <= 5000
+    ),
+
+  category issue_category not null default 'other',
+
+  status issue_status not null default 'reported',
+
+  location_name text,
+
+  latitude double precision not null
+    check (latitude between -90 and 90),
+
+  longitude double precision not null
+    check (longitude between -180 and 180),
+
+  support_count integer not null default 0
+    check (support_count >= 0),
+
+  view_count integer not null default 0
+    check (view_count >= 0),
+
+  created_at timestamptz not null default now(),
+
+  updated_at timestamptz not null default now()
+);
+
+
+-- ============================================================
+-- ISSUE MEDIA
+-- Images and videos
+-- ============================================================
+
+create table if not exists issue_media (
+  id uuid primary key default gen_random_uuid(),
+
+  issue_id uuid not null
+    references issues(id)
+    on delete cascade,
+
+  storage_path text not null,
+
+  original_name text,
+
+  mime_type text,
+
+  type media_type not null,
+
+  size_bytes bigint,
+
+  created_at timestamptz not null default now()
+);
+
+
+-- ============================================================
+-- ISSUE DOCUMENTS
+-- PDFs and supporting files
+-- ============================================================
+
+create table if not exists issue_documents (
+  id uuid primary key default gen_random_uuid(),
+
+  issue_id uuid not null
+    references issues(id)
+    on delete cascade,
+
+  storage_path text not null,
+
+  original_name text,
+
+  mime_type text,
+
+  size_bytes bigint,
+
+  created_at timestamptz not null default now()
+);
+
+
+-- ============================================================
+-- ISSUE SUPPORTS / UPVOTES
+-- One support per user per issue
+-- ============================================================
+
+create table if not exists issue_supports (
+  issue_id uuid not null
+    references issues(id)
+    on delete cascade,
+
+  user_id uuid not null
+    references auth.users(id)
+    on delete cascade,
+
+  created_at timestamptz not null default now(),
+
+  primary key (issue_id, user_id)
+);
+
+
+-- ============================================================
+-- INDEXES
+-- ============================================================
+
+create index if not exists issues_user_idx
+  on issues(user_id);
+
+create index if not exists issues_status_idx
+  on issues(status);
+
+create index if not exists issues_category_idx
+  on issues(category);
+
+create index if not exists issues_created_at_idx
+  on issues(created_at desc);
+
+create index if not exists issues_lat_lng_idx
+  on issues(latitude, longitude);
+
+create index if not exists issue_media_issue_idx
+  on issue_media(issue_id);
+
+create index if not exists issue_documents_issue_idx
+  on issue_documents(issue_id);
+
+create index if not exists issue_supports_user_idx
+  on issue_supports(user_id);
+
+
+-- ============================================================
+-- UPDATED_AT TRIGGER
+-- Uses the set_updated_at() function from your existing schema
+-- ============================================================
+
+drop trigger if exists issues_updated_at on issues;
+
+create trigger issues_updated_at
+before update on issues
+for each row
+execute function set_updated_at();
+
+
+-- ============================================================
+-- AUTOMATIC SUPPORT COUNT
+-- ============================================================
+
+create or replace function update_issue_support_count()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+
+  if tg_op = 'INSERT' then
+
+    update issues
+    set support_count = support_count + 1
+    where id = new.issue_id;
+
+    return new;
+
+  elsif tg_op = 'DELETE' then
+
+    update issues
+    set support_count = greatest(support_count - 1, 0)
+    where id = old.issue_id;
+
+    return old;
+
+  end if;
+
+  return null;
+
+end;
+$$;
+
+
+drop trigger if exists issue_support_insert_count on issue_supports;
+
+create trigger issue_support_insert_count
+after insert on issue_supports
+for each row
+execute function update_issue_support_count();
+
+
+drop trigger if exists issue_support_delete_count on issue_supports;
+
+create trigger issue_support_delete_count
+after delete on issue_supports
+for each row
+execute function update_issue_support_count();
+
+
+-- ============================================================
+-- ROW LEVEL SECURITY
+-- ============================================================
+
+alter table issues enable row level security;
+
+alter table issue_media enable row level security;
+
+alter table issue_documents enable row level security;
+
+alter table issue_supports enable row level security;
+
+
+-- ============================================================
+-- ISSUES POLICIES
+-- ============================================================
+
+drop policy if exists issues_public_read on issues;
+
+create policy issues_public_read
+on issues
+for select
+using (true);
+
+
+drop policy if exists issues_authenticated_insert on issues;
+
+create policy issues_authenticated_insert
+on issues
+for insert
+to authenticated
+with check (
+  auth.uid() = user_id
+);
+
+
+drop policy if exists issues_owner_update on issues;
+
+create policy issues_owner_update
+on issues
+for update
+to authenticated
+using (
+  auth.uid() = user_id
+)
+with check (
+  auth.uid() = user_id
+);
+
+
+drop policy if exists issues_owner_delete on issues;
+
+create policy issues_owner_delete
+on issues
+for delete
+to authenticated
+using (
+  auth.uid() = user_id
+);
+
+
+-- ============================================================
+-- ISSUE MEDIA POLICIES
+-- ============================================================
+
+drop policy if exists issue_media_public_read on issue_media;
+
+create policy issue_media_public_read
+on issue_media
+for select
+using (true);
+
+
+drop policy if exists issue_media_owner_insert on issue_media;
+
+create policy issue_media_owner_insert
+on issue_media
+for insert
+to authenticated
+with check (
+  exists (
+    select 1
+    from issues
+    where issues.id = issue_media.issue_id
+      and issues.user_id = auth.uid()
+  )
+);
+
+
+drop policy if exists issue_media_owner_delete on issue_media;
+
+create policy issue_media_owner_delete
+on issue_media
+for delete
+to authenticated
+using (
+  exists (
+    select 1
+    from issues
+    where issues.id = issue_media.issue_id
+      and issues.user_id = auth.uid()
+  )
+);
+
+
+-- ============================================================
+-- ISSUE DOCUMENT POLICIES
+-- ============================================================
+
+drop policy if exists issue_documents_owner_read on issue_documents;
+
+create policy issue_documents_owner_read
+on issue_documents
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from issues
+    where issues.id = issue_documents.issue_id
+      and issues.user_id = auth.uid()
+  )
+);
+
+
+drop policy if exists issue_documents_owner_insert on issue_documents;
+
+create policy issue_documents_owner_insert
+on issue_documents
+for insert
+to authenticated
+with check (
+  exists (
+    select 1
+    from issues
+    where issues.id = issue_documents.issue_id
+      and issues.user_id = auth.uid()
+  )
+);
+
+
+drop policy if exists issue_documents_owner_delete on issue_documents;
+
+create policy issue_documents_owner_delete
+on issue_documents
+for delete
+to authenticated
+using (
+  exists (
+    select 1
+    from issues
+    where issues.id = issue_documents.issue_id
+      and issues.user_id = auth.uid()
+  )
+);
+
+
+-- ============================================================
+-- ISSUE SUPPORT POLICIES
+-- ============================================================
+
+drop policy if exists issue_supports_public_read on issue_supports;
+
+create policy issue_supports_public_read
+on issue_supports
+for select
+using (true);
+
+
+drop policy if exists issue_supports_insert_own on issue_supports;
+
+create policy issue_supports_insert_own
+on issue_supports
+for insert
+to authenticated
+with check (
+  auth.uid() = user_id
+);
+
+
+drop policy if exists issue_supports_delete_own on issue_supports;
+
+create policy issue_supports_delete_own
+on issue_supports
+for delete
+to authenticated
+using (
+  auth.uid() = user_id
+);
+
+
+-- ============================================================
+-- STORAGE BUCKETS
+-- ============================================================
+
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit
+)
+values
+(
+  'issue-media',
+  'issue-media',
+  true,
+  52428800
+)
+on conflict (id) do nothing;
+
+
+insert into storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit
+)
+values
+(
+  'issue-files',
+  'issue-files',
+  false,
+  20971520
+)
+on conflict (id) do nothing;
+
+
+-- ============================================================
+-- ISSUE MEDIA STORAGE POLICIES
+--
+-- Path format:
+-- {user_id}/{issue_id}/{filename}
+-- ============================================================
+
+drop policy if exists "issue-media public read"
+on storage.objects;
+
+create policy "issue-media public read"
+on storage.objects
+for select
+using (
+  bucket_id = 'issue-media'
+);
+
+
+drop policy if exists "issue-media upload own"
+on storage.objects;
+
+create policy "issue-media upload own"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'issue-media'
+  and (
+    split_part(name, '/', 1)
+    = auth.uid()::text
+  )
+);
+
+
+drop policy if exists "issue-media delete own"
+on storage.objects;
+
+create policy "issue-media delete own"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'issue-media'
+  and (
+    split_part(name, '/', 1)
+    = auth.uid()::text
+  )
+);
+
+
+-- ============================================================
+-- ISSUE FILE STORAGE POLICIES
+--
+-- Path format:
+-- {user_id}/{issue_id}/{filename}
+-- ============================================================
+
+drop policy if exists "issue-files upload own"
+on storage.objects;
+
+create policy "issue-files upload own"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'issue-files'
+  and (
+    split_part(name, '/', 1)
+    = auth.uid()::text
+  )
+);
+
+
+drop policy if exists "issue-files read own"
+on storage.objects;
+
+create policy "issue-files read own"
+on storage.objects
+for select
+to authenticated
+using (
+  bucket_id = 'issue-files'
+  and (
+    split_part(name, '/', 1)
+    = auth.uid()::text
+  )
+);
+
+
+drop policy if exists "issue-files delete own"
+on storage.objects;
+
+create policy "issue-files delete own"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'issue-files'
+  and (
+    split_part(name, '/', 1)
+    = auth.uid()::text
+  )
+);
+
+
+-- ============================================================
+-- NEARBY ISSUES FUNCTION
+--
+-- Radius is in meters.
+-- Default radius: 2 kilometres.
+-- ============================================================
+
+create or replace function nearby_issues(
+  user_lat double precision,
+  user_lng double precision,
+  radius_meters double precision default 2000,
+  result_limit integer default 20
+)
+returns table (
+  id uuid,
+  user_id uuid,
+  title text,
+  description text,
+  category issue_category,
+  status issue_status,
+  location_name text,
+  latitude double precision,
+  longitude double precision,
+  support_count integer,
+  created_at timestamptz,
+  distance_meters double precision
+)
+language sql
+stable
+set search_path = public
+as $$
+  select
+    i.id,
+    i.user_id,
+    i.title,
+    i.description,
+    i.category,
+    i.status,
+    i.location_name,
+    i.latitude,
+    i.longitude,
+    i.support_count,
+    i.created_at,
+
+    (
+      6371000 * acos(
+        least(
+          1.0,
+          greatest(
+            -1.0,
+
+            cos(radians(user_lat))
+            * cos(radians(i.latitude))
+            * cos(
+              radians(i.longitude)
+              - radians(user_lng)
+            )
+            + sin(radians(user_lat))
+            * sin(radians(i.latitude))
+          )
+        )
+      )
+    ) as distance_meters
+
+  from issues i
+
+  where
+    (
+      6371000 * acos(
+        least(
+          1.0,
+          greatest(
+            -1.0,
+
+            cos(radians(user_lat))
+            * cos(radians(i.latitude))
+            * cos(
+              radians(i.longitude)
+              - radians(user_lng)
+            )
+            + sin(radians(user_lat))
+            * sin(radians(i.latitude))
+          )
+        )
+      )
+    ) <= radius_meters
+
+  order by distance_meters asc
+
+  limit result_limit;
+$$;
