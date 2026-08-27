@@ -7,8 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:smoke": "node --test scripts/smoke-institution.mjs",
-    "test:scraper": "node --test scripts/smoke-scraper.mjs"
+    "test:smoke": "node --env-file=.env.local --test scripts/smoke-institution.mjs",
+    "test:smoke:industry": "node --env-file=.env.local --test scripts/smoke-industry.mjs",
+    "test:scraper": "node --env-file=.env.local --test scripts/smoke-scraper.mjs",
+    "seed:industry": "node --env-file=.env.local scripts/seed-industry-demo.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
