@@ -9,48 +9,66 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "accent2";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "danger"
+  | "accent2"
+  | "dark";
+type ButtonSize = "sm" | "md" | "lg";
 
 const baseButton =
-  "inline-flex items-center justify-center gap-2 h-10 px-4 text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 font-medium border transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-full whitespace-nowrap";
+
+const sizeClass: Record<ButtonSize, string> = {
+  sm: "h-8 px-3 text-xs",
+  md: "h-10 px-4 text-sm",
+  lg: "h-11 px-5 text-sm",
+};
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "bg-[color:var(--accent)] text-white border-[color:var(--accent)] hover:bg-[color:var(--accent-hover)]",
+    "bg-[color:var(--accent)] text-white border-[color:var(--accent)] hover:bg-[color:var(--accent-hover)] shadow-[var(--shadow-sm)]",
   secondary:
-    "bg-background text-foreground border-border-strong hover:bg-surface",
+    "bg-[color:var(--surface)] text-[color:var(--foreground)] border-[color:var(--border-strong)] hover:bg-[color:var(--surface-2)]",
   ghost:
-    "bg-transparent text-foreground border-transparent hover:bg-surface",
+    "bg-transparent text-[color:var(--foreground)] border-transparent hover:bg-[color:var(--surface-2)]",
   danger:
-    "bg-background text-[color:var(--danger)] border-[color:var(--danger)] hover:bg-[color:var(--surface-3)]",
+    "bg-[color:var(--surface)] text-[color:var(--danger)] border-[color:var(--danger)] hover:bg-[color:var(--danger-soft)]",
   accent2:
-    "bg-[color:var(--accent-2)] text-white border-[color:var(--accent-2)] hover:opacity-90",
+    "bg-[color:var(--accent-2)] text-white border-[color:var(--accent-2)] hover:opacity-90 shadow-[var(--shadow-sm)]",
+  dark: "bg-[color:var(--foreground)] text-[color:var(--background)] border-[color:var(--foreground)] hover:opacity-90 shadow-[var(--shadow-sm)]",
 };
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
+  size?: ButtonSize;
 };
 
 export function Button({
   variant = "primary",
+  size = "md",
   className = "",
   ...rest
 }: ButtonProps) {
   return (
     <button
       {...rest}
-      className={`${baseButton} ${buttonVariants[variant]} ${className}`}
+      className={`${baseButton} ${sizeClass[size]} ${buttonVariants[variant]} ${className}`}
     />
   );
 }
 
 type LinkButtonProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   variant?: ButtonVariant;
+  size?: ButtonSize;
   href: string;
 };
 
 export function LinkButton({
   variant = "primary",
+  size = "md",
   className = "",
   href,
   children,
@@ -60,14 +78,41 @@ export function LinkButton({
     <Link
       href={href}
       {...rest}
-      className={`${baseButton} ${buttonVariants[variant]} ${className}`}
+      className={`${baseButton} ${sizeClass[size]} ${buttonVariants[variant]} ${className}`}
     >
       {children}
     </Link>
   );
 }
 
-export function Label({ className = "", ...rest }: LabelHTMLAttributes<HTMLLabelElement>) {
+export function IconButton({
+  ariaLabel,
+  variant = "ghost",
+  size = "md",
+  className = "",
+  children,
+  ...rest
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  ariaLabel: string;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+}) {
+  const dim = size === "sm" ? "h-8 w-8" : size === "lg" ? "h-11 w-11" : "h-10 w-10";
+  return (
+    <button
+      {...rest}
+      aria-label={ariaLabel}
+      className={`inline-flex items-center justify-center border transition-all rounded-full disabled:opacity-50 ${dim} ${buttonVariants[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function Label({
+  className = "",
+  ...rest
+}: LabelHTMLAttributes<HTMLLabelElement>) {
   return (
     <label
       {...rest}
@@ -76,13 +121,14 @@ export function Label({ className = "", ...rest }: LabelHTMLAttributes<HTMLLabel
   );
 }
 
-export function Input({ className = "", ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...rest}
-      className={`w-full h-10 px-3 border border-border bg-background text-foreground text-sm focus:border-[color:var(--accent)] focus:outline-none ${className}`}
-    />
-  );
+const inputBase =
+  "w-full h-11 px-4 border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] text-sm rounded-xl focus:border-[color:var(--accent)] focus:outline-none placeholder:text-[color:var(--muted-2)]";
+
+export function Input({
+  className = "",
+  ...rest
+}: InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...rest} className={`${inputBase} ${className}`} />;
 }
 
 export function Textarea({
@@ -92,7 +138,7 @@ export function Textarea({
   return (
     <textarea
       {...rest}
-      className={`w-full min-h-24 p-3 border border-border bg-background text-foreground text-sm focus:border-[color:var(--accent)] focus:outline-none ${className}`}
+      className={`w-full min-h-28 p-4 border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] text-sm rounded-xl focus:border-[color:var(--accent)] focus:outline-none placeholder:text-[color:var(--muted-2)] ${className}`}
     />
   );
 }
@@ -104,7 +150,7 @@ export function Select({
   return (
     <select
       {...rest}
-      className={`w-full h-10 px-2 border border-border bg-background text-foreground text-sm focus:border-[color:var(--accent)] focus:outline-none ${className}`}
+      className={`w-full h-11 px-3 border border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--foreground)] text-sm rounded-xl focus:border-[color:var(--accent)] focus:outline-none ${className}`}
     />
   );
 }
@@ -126,10 +172,10 @@ export function Field({
     <div className="mb-5">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {hint && !error && (
-        <p className="mt-1 text-xs text-muted-2">{hint}</p>
+      {hint && !error && <p className="mt-1.5 text-xs text-muted-2">{hint}</p>}
+      {error && (
+        <p className="mt-1.5 text-xs text-[color:var(--danger)]">{error}</p>
       )}
-      {error && <p className="mt-1 text-xs text-[color:var(--danger)]">{error}</p>}
     </div>
   );
 }
@@ -152,86 +198,100 @@ export function SectionTitle({
   eyebrow,
   title,
   description,
+  action,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
+  action?: ReactNode;
 }) {
   return (
-    <div className="max-w-2xl">
-      {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
-      <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-        {title}
-      </h2>
-      {description && (
-        <p className="mt-3 text-base text-muted leading-relaxed">
-          {description}
-        </p>
-      )}
+    <div className="flex items-end justify-between gap-6">
+      <div className="max-w-2xl">
+        {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
+        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
+        {description && (
+          <p className="mt-2 text-sm text-muted leading-relaxed">{description}</p>
+        )}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
 
-export function StatusPill({
-  status,
+type StatusKind =
+  | "pending"
+  | "under_review"
+  | "verified"
+  | "rejected"
+  | "suspended"
+  | "sent"
+  | "expired"
+  | "revoked"
+  | "accepted"
+  | "withdrawn"
+  | "completed";
+
+const statusMap: Record<StatusKind, { label: string; tone: BadgeTone }> = {
+  pending: { label: "Pending", tone: "neutral" },
+  under_review: { label: "Under Review", tone: "warning" },
+  verified: { label: "Verified", tone: "success" },
+  rejected: { label: "Rejected", tone: "danger" },
+  suspended: { label: "Suspended", tone: "danger" },
+  sent: { label: "Sent", tone: "neutral" },
+  expired: { label: "Expired", tone: "neutral" },
+  revoked: { label: "Revoked", tone: "neutral" },
+  accepted: { label: "Accepted", tone: "success" },
+  withdrawn: { label: "Withdrawn", tone: "neutral" },
+  completed: { label: "Completed", tone: "success" },
+};
+
+export function StatusPill({ status }: { status: StatusKind | string }) {
+  const item = statusMap[status as StatusKind] ?? {
+    label: String(status).replace(/_/g, " "),
+    tone: "neutral" as BadgeTone,
+  };
+  return <Badge tone={item.tone}>{item.label}</Badge>;
+}
+
+export type BadgeTone =
+  | "neutral"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "accent";
+
+const badgeTone: Record<BadgeTone, string> = {
+  neutral:
+    "bg-[color:var(--surface-2)] text-[color:var(--muted)] border-[color:var(--border)]",
+  success:
+    "bg-[color:var(--success-soft)] text-[color:var(--success)] border-transparent",
+  warning:
+    "bg-[color:var(--warning-soft)] text-[color:var(--warning)] border-transparent",
+  danger:
+    "bg-[color:var(--danger-soft)] text-[color:var(--danger)] border-transparent",
+  info: "bg-[color:var(--info-soft)] text-[color:var(--info)] border-transparent",
+  accent:
+    "bg-[color:var(--accent-soft)] text-[color:var(--accent)] border-transparent",
+};
+
+export function Badge({
+  tone = "neutral",
+  className = "",
+  children,
 }: {
-  status:
-    | "pending"
-    | "under_review"
-    | "verified"
-    | "rejected"
-    | "suspended"
-    | "sent"
-    | "expired"
-    | "revoked";
+  tone?: BadgeTone;
+  className?: string;
+  children: ReactNode;
 }) {
-  const map: Record<string, { label: string; className: string }> = {
-    pending: {
-      label: "Pending",
-      className: "border-border text-muted bg-surface",
-    },
-    under_review: {
-      label: "Under Review",
-      className:
-        "border-[color:var(--warning)] text-[color:var(--warning)] bg-[color:var(--surface-3)]",
-    },
-    verified: {
-      label: "Verified",
-      className:
-        "border-[color:var(--success)] text-[color:var(--success)] bg-[color:var(--accent-2-soft)]",
-    },
-    rejected: {
-      label: "Rejected",
-      className:
-        "border-[color:var(--danger)] text-[color:var(--danger)] bg-[color:var(--surface-3)]",
-    },
-    suspended: {
-      label: "Suspended",
-      className:
-        "border-[color:var(--danger)] text-[color:var(--danger)] bg-[color:var(--surface-3)]",
-    },
-    sent: {
-      label: "Sent",
-      className: "border-border-strong text-foreground bg-surface",
-    },
-    expired: {
-      label: "Expired",
-      className: "border-border text-muted bg-surface",
-    },
-    revoked: {
-      label: "Revoked",
-      className: "border-border text-muted bg-surface",
-    },
-  };
-  const item = map[status] ?? {
-    label: status,
-    className: "border-border text-muted bg-surface",
-  };
   return (
     <span
-      className={`inline-flex items-center h-6 px-2 text-[11px] uppercase tracking-wider border ${item.className}`}
+      className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[11px] font-medium border ${badgeTone[tone]} ${className}`}
     >
-      {item.label}
+      {children}
     </span>
   );
 }
@@ -240,21 +300,30 @@ export function Card({
   children,
   className = "",
   tone,
+  interactive,
 }: {
   children: ReactNode;
   className?: string;
-  tone?: "warm" | "sage" | "blush" | "default";
+  tone?: "warm" | "sage" | "blush" | "default" | "inset";
+  interactive?: boolean;
 }) {
   const toneClass =
     tone === "warm"
-      ? "bg-surface"
+      ? "bg-[color:var(--surface-2)]"
       : tone === "sage"
-        ? "bg-[color:var(--surface-2)]"
+        ? "bg-[color:var(--accent-2-soft)]"
         : tone === "blush"
-          ? "bg-[color:var(--surface-3)]"
-          : "bg-background";
+          ? "bg-[color:var(--accent-soft)]"
+          : tone === "inset"
+            ? "bg-[color:var(--surface-inset)]"
+            : "bg-[color:var(--surface)]";
+  const hoverClass = interactive
+    ? "hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all"
+    : "";
   return (
-    <div className={`border border-border ${toneClass} ${className}`}>
+    <div
+      className={`border border-[color:var(--border)] rounded-2xl shadow-[var(--shadow-sm)] ${toneClass} ${hoverClass} ${className}`}
+    >
       {children}
     </div>
   );
@@ -263,16 +332,97 @@ export function Card({
 export function EmptyState({
   title,
   description,
+  action,
 }: {
   title: string;
   description?: string;
+  action?: ReactNode;
 }) {
   return (
-    <div className="border border-dashed border-border-strong bg-surface p-8 text-center">
+    <div className="border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface-2)] p-10 text-center rounded-2xl">
       <p className="text-sm font-medium text-foreground">{title}</p>
       {description && (
-        <p className="mt-1 text-sm text-muted">{description}</p>
+        <p className="mt-1.5 text-sm text-muted max-w-md mx-auto">
+          {description}
+        </p>
       )}
+      {action && <div className="mt-5 flex justify-center">{action}</div>}
     </div>
+  );
+}
+
+export function KpiCard({
+  eyebrow,
+  value,
+  trend,
+  trendTone = "neutral",
+  hint,
+  icon,
+}: {
+  eyebrow: string;
+  value: string | number;
+  trend?: string;
+  trendTone?: BadgeTone;
+  hint?: string;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl bg-[color:var(--surface)] border border-[color:var(--border)] p-5 shadow-[var(--shadow-sm)]">
+      <div className="flex items-center gap-2 text-xs text-muted">
+        {icon}
+        <span className="uppercase tracking-widest">{eyebrow}</span>
+      </div>
+      <div className="mt-3 flex items-baseline gap-3">
+        <p className="text-3xl md:text-4xl font-semibold tracking-tight tabular-nums">
+          {value}
+        </p>
+        {trend && <Badge tone={trendTone}>{trend}</Badge>}
+      </div>
+      {hint && <p className="mt-1 text-xs text-muted-2">{hint}</p>}
+    </div>
+  );
+}
+
+export function ProgressBar({
+  value,
+  tone = "accent",
+}: {
+  value: number;
+  tone?: "accent" | "accent2";
+}) {
+  const bg =
+    tone === "accent2" ? "bg-[color:var(--accent-2)]" : "bg-[color:var(--accent)]";
+  const clamped = Math.max(0, Math.min(100, value));
+  return (
+    <div
+      className="w-full h-1.5 rounded-full bg-[color:var(--surface-inset)] overflow-hidden"
+      role="progressbar"
+      aria-valuenow={clamped}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div
+        className={`h-full ${bg} rounded-full transition-all`}
+        style={{ width: `${clamped}%` }}
+      />
+    </div>
+  );
+}
+
+export function Chip({
+  children,
+  tone,
+  className = "",
+}: {
+  children: ReactNode;
+  tone?: BadgeTone;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center h-7 px-3 rounded-full text-xs border ${tone ? badgeTone[tone] : "bg-[color:var(--surface-2)] text-[color:var(--foreground)] border-[color:var(--border)]"} ${className}`}
+    >
+      {children}
+    </span>
   );
 }
