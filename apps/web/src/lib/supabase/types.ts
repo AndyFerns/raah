@@ -249,6 +249,17 @@ export type ProjectMilestone = {
   created_at: string;
 };
 
+export type ProjectMedia = {
+  id: string;
+  project_id: string;
+  caption: string | null;
+  external_url: string | null;
+  storage_path: string | null;
+  mime_type: string | null;
+  ord: number;
+  created_at: string;
+};
+
 export type ProjectSupportOffer = {
   id: string;
   project_id: string;
