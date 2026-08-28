@@ -1,22 +1,28 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
-import { Button, Card, Field, Input, Select, Textarea } from "@/components/ui";
+import { Button, Card, Chip, Field, Input, Select, StatusPill, Textarea } from "@/components/ui";
+import { CoinIcon, GraduationIcon, SparkleIcon } from "@/components/icons";
 import {
-  COLLABORATION_STATUS_LABEL,
   SUPPORT_TYPE_LABEL,
-  type CollaborationStatus,
   type SupportOfferType,
 } from "@/lib/supabase/types";
-import { submitSupportOfferAction } from "../../industry/actions";
+import { submitSupportOfferAction } from "@/app/(app)/industry/actions";
 
 type OfferKind = "technical_support" | "funding" | "mentorship";
 
 const KIND_LABEL: Record<OfferKind, string> = {
-  technical_support: "Offer Technical Support",
-  funding: "Offer Funding",
-  mentorship: "Offer Mentorship",
+  technical_support: "Technical support",
+  funding: "Funding",
+  mentorship: "Mentorship",
+};
+
+const KIND_ICON: Record<OfferKind, ReactNode> = {
+  technical_support: <SparkleIcon size={14} />,
+  funding: <CoinIcon size={14} />,
+  mentorship: <GraduationIcon size={14} />,
 };
 
 export function OfferPanel({
@@ -31,29 +37,19 @@ export function OfferPanel({
   const [kind, setKind] = useState<OfferKind | null>(null);
 
   return (
-    <Card tone="blush" className="p-6">
+    <Card tone="blush" className="p-5">
       <p className="eyebrow mb-3">Support this project</p>
       {existingOffers.length > 0 && (
-        <ul className="mb-4 divide-y divide-border border-y border-border">
+        <ul className="mb-4 space-y-2">
           {existingOffers.map((o) => (
             <li
               key={o.id}
-              className="py-2 flex items-center justify-between text-xs"
+              className="flex items-center justify-between text-xs bg-[color:var(--surface)] rounded-xl border border-[color:var(--border)] px-3 py-2"
             >
-              <span>
-                {
-                  SUPPORT_TYPE_LABEL[
-                    o.support_type as SupportOfferType
-                  ]
-                }
-              </span>
-              <span className="uppercase tracking-wider text-muted">
-                {
-                  COLLABORATION_STATUS_LABEL[
-                    o.status as CollaborationStatus
-                  ]
-                }
-              </span>
+              <Chip>
+                {SUPPORT_TYPE_LABEL[o.support_type as SupportOfferType]}
+              </Chip>
+              <StatusPill status={o.status} />
             </li>
           ))}
         </ul>
@@ -67,8 +63,10 @@ export function OfferPanel({
               type="button"
               variant="secondary"
               onClick={() => setKind(k)}
+              className="justify-start"
             >
-              {KIND_LABEL[k]}
+              {KIND_ICON[k]}
+              <span className="ml-1">{KIND_LABEL[k]}</span>
             </Button>
           ))}
         </div>
