@@ -37,6 +37,9 @@ export default async function AccountPage() {
   ) {
     redirect("/industry");
   }
+  if (session.profile.role === "government") {
+    redirect("/government");
+  }
 
   const supabase = await createSupabaseServerClient();
   const { data: memberships } = await supabase
