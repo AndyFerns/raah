@@ -1,35 +1,48 @@
-import Link from "next/link";
-import { RaahMark } from "@/components/mark";
-import { SignOutButton } from "@/components/sign-out-button";
-import { Container } from "@/components/ui";
+import { AppShell, MobileTabs, type AppNavItem } from "@/components/app-shell";
+import {
+  BuildingIcon,
+  FolderIcon,
+  HandshakeIcon,
+  LayoutIcon,
+  MapPinIcon,
+} from "@/components/icons";
+import { requireSession } from "@/lib/auth";
+import { ROLE_LABEL } from "@/lib/supabase/types";
 
-function GovHeader() {
-  return (
-    <header className="border-b border-border bg-background/90 backdrop-blur-sm sticky top-0 z-40">
-      <Container className="flex h-14 items-center justify-between px-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground"
-        >
-          <RaahMark size={20} />
-          <span>Raah</span>
-        </Link>
-        <div className="flex items-center gap-6 text-sm font-medium">
-          <Link href="/" className="text-foreground hover:text-muted">
-            Home
-          </Link>
-          <SignOutButton />
-        </div>
-      </Container>
-    </header>
-  );
-}
+export default async function GovernmentLayout({
+  children,
+}: LayoutProps<"/">) {
+  const session = await requireSession();
 
-export default function GovernmentLayout({ children }: LayoutProps<"/">) {
+  const primary: AppNavItem[] = [
+    {
+      href: "/government",
+      label: "Issues map",
+      icon: <MapPinIcon size={18} />,
+      match: "^/government(?:/)?$",
+    },
+  ];
+
+  const secondary: AppNavItem[] = [
+    { href: "/challenges", label: "Challenges", icon: <HandshakeIcon size={18} /> },
+    { href: "/institutions", label: "Institutions", icon: <BuildingIcon size={18} /> },
+    { href: "/projects", label: "Projects", icon: <FolderIcon size={18} /> },
+    { href: "/", label: "Public site", icon: <LayoutIcon size={18} /> },
+  ];
+
   return (
-    <>
-      <GovHeader />
-      <main className="flex-1 flex flex-col overflow-hidden">{children}</main>
-    </>
+    <AppShell
+      brand={{ title: "Raah", subtitle: "Government", href: "/government" }}
+      primary={primary}
+      secondary={secondary}
+      user={{
+        name: session.profile.full_name ?? session.email ?? "Signed in",
+        role: ROLE_LABEL[session.profile.role],
+        email: session.email,
+      }}
+    >
+      <MobileTabs items={primary} />
+      {children}
+    </AppShell>
   );
 }
