@@ -131,6 +131,95 @@ async function linkUser(orgId) {
   return user.id;
 }
 
+// A small pool of public Unsplash image URLs used as demo project media.
+const DEMO_MEDIA = {
+  water: [
+    {
+      url: "https://images.unsplash.com/photo-1559825481-12a05cc00344?auto=format&fit=crop&w=1600&q=70",
+      caption: "Field sensor prototype at a rural water source",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?auto=format&fit=crop&w=1600&q=70",
+      caption: "Community handpump — pilot site",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1519865885898-a54a6f2c7eea?auto=format&fit=crop&w=1600&q=70",
+      caption: "Calibration bench setup",
+    },
+  ],
+  agriculture: [
+    {
+      url: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=1600&q=70",
+      caption: "Smallholder farm plot — pilot location",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=1600&q=70",
+      caption: "Soil moisture probe field trial",
+    },
+  ],
+  energy: [
+    {
+      url: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=1600&q=70",
+      caption: "Solar micro-grid installation",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1600&q=70",
+      caption: "Telemetry board bench test",
+    },
+  ],
+  accessibility: [
+    {
+      url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1600&q=70",
+      caption: "Bus stop pilot location",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1580983561371-7f4b242d8ec0?auto=format&fit=crop&w=1600&q=70",
+      caption: "Audio beacon enclosure",
+    },
+  ],
+  healthcare: [
+    {
+      url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1600&q=70",
+      caption: "Portable diagnostic prototype",
+    },
+    {
+      url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=70",
+      caption: "Rural clinic — pilot site",
+    },
+  ],
+};
+
+async function seedDemoMedia() {
+  const { data: projs } = await admin
+    .from("projects")
+    .select("id, domain, title")
+    .like("title", "[DEMO]%");
+  if (!projs || projs.length === 0) return 0;
+
+  let inserted = 0;
+  for (const p of projs) {
+    const pool = DEMO_MEDIA[p.domain] ?? DEMO_MEDIA.water;
+    const { data: existing } = await admin
+      .from("project_media")
+      .select("id")
+      .eq("project_id", p.id)
+      .limit(1)
+      .maybeSingle();
+    if (existing) continue;
+    const rows = pool.map((m, i) => ({
+      project_id: p.id,
+      external_url: m.url,
+      caption: m.caption,
+      mime_type: "image/jpeg",
+      ord: i + 1,
+    }));
+    const { error } = await admin.from("project_media").insert(rows);
+    if (error) throw error;
+    inserted += rows.length;
+  }
+  return inserted;
+}
+
 async function seedExtraDemoProjects() {
   const { data: inst } = await admin
     .from("institutions")
@@ -264,6 +353,7 @@ async function main() {
   const orgId = await upsertDemoOrg();
   const linkedUserId = await linkUser(orgId);
   const projectIds = await seedExtraDemoProjects();
+  const mediaCount = await seedDemoMedia();
 
   console.log("\n=== DEMO industry seed complete ===");
   console.log(`Organization: ${DEMO_ORG_NAME}  (slug: ${DEMO_ORG_SLUG})`);
@@ -282,6 +372,7 @@ async function main() {
     );
   }
   console.log(`Extra demo projects added: ${projectIds.length}`);
+  console.log(`Demo media rows added: ${mediaCount}`);
   console.log("\nTo delete everything this script created, run in SQL editor:");
   console.log(`  delete from industry_organizations where slug = '${DEMO_ORG_SLUG}';`);
   console.log(`  delete from projects where title like '[DEMO]%';`);
