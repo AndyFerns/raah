@@ -62,14 +62,12 @@ export function GovernmentDashboard({
 
       <style>{`
         .gov-dashboard {
+          position: absolute;
+          inset: 0;
           display: flex;
           flex-direction: column;
-          flex: 1;
-          min-height: calc(100vh - 4rem);
           background: var(--background);
-          border-radius: 16px;
           overflow: hidden;
-          border: 1px solid var(--border);
         }
 
         .gov-error-banner {
@@ -103,18 +101,20 @@ export function GovernmentDashboard({
           flex: 1;
           min-height: 0;
           position: relative;
+          overflow: hidden;
         }
 
         .gov-map-area {
           flex: 1;
           min-width: 0;
           position: relative;
+          overflow: hidden;
         }
 
         .gov-stats-overlay {
           position: absolute;
-          top: 16px;
-          left: 16px;
+          top: 24px;
+          left: 84px;
           display: flex;
           align-items: baseline;
           gap: 6px;
