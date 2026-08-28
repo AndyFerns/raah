@@ -65,8 +65,11 @@ export function GovernmentDashboard({
           display: flex;
           flex-direction: column;
           flex: 1;
-          min-height: 0;
-          background: #0a0f1a;
+          min-height: calc(100vh - 4rem);
+          background: var(--background);
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid var(--border);
         }
 
         .gov-error-banner {
@@ -116,10 +119,10 @@ export function GovernmentDashboard({
           align-items: baseline;
           gap: 6px;
           padding: 8px 14px;
-          background: rgba(10, 15, 26, 0.85);
+          background: color-mix(in srgb, var(--surface) 88%, transparent);
           backdrop-filter: blur(8px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 6px;
+          border: 1px solid var(--border);
+          border-radius: 999px;
           z-index: 5;
           pointer-events: none;
         }
@@ -127,15 +130,15 @@ export function GovernmentDashboard({
         .gov-stats-count {
           font-size: 20px;
           font-weight: 700;
-          color: #e2e8f0;
+          color: var(--foreground);
           font-variant-numeric: tabular-nums;
         }
 
         .gov-stats-label {
-          font-size: 12px;
-          color: #64748b;
+          font-size: 11px;
+          color: var(--muted);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.08em;
         }
       `}</style>
     </div>
