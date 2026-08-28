@@ -25,8 +25,10 @@ export async function GET(request: NextRequest) {
 
   // OAuth PKCE flow.
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    console.log("[AUTH TRACKING] Exchanging code for session...");
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
+      console.error("[AUTH TRACKING] Error exchanging code:", error.message);
       return NextResponse.redirect(
         new URL(
           `/auth/sign-in?error=${encodeURIComponent(error.message)}`,
@@ -34,6 +36,7 @@ export async function GET(request: NextRequest) {
         )
       );
     }
+    console.log("[AUTH TRACKING] Successfully created session for user:", data.user?.email);
   }
   // Email confirmation / recovery / magiclink flow.
   else if (tokenHash && type) {
