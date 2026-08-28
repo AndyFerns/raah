@@ -1,10 +1,14 @@
 import Link from "next/link";
 import {
+  Badge,
   Card,
+  Chip,
   Container,
   EmptyState,
+  ProgressBar,
   SectionTitle,
 } from "@/components/ui";
+import { ArrowRightIcon, BuildingIcon } from "@/components/icons";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   PROJECT_STAGE_LABEL,
@@ -24,10 +28,10 @@ export default async function ProjectsPage() {
     )
     .eq("discoverable", true)
     .order("updated_at", { ascending: false })
-    .limit(50);
+    .limit(60);
 
   return (
-    <Container className="py-14">
+    <Container className="py-10 md:py-14">
       <SectionTitle
         eyebrow="Projects"
         title="Projects open to collaboration"
@@ -55,41 +59,50 @@ export default async function ProjectsPage() {
             }
           ).institutions;
           return (
-            <Card key={p.id} className="p-5 flex flex-col">
-              <p className="text-xs uppercase tracking-widest text-muted">
-                {p.domain ?? "General"}
-              </p>
-              <h3 className="mt-2 text-lg font-semibold tracking-tight">
+            <Card key={p.id} interactive className="p-5 flex flex-col group">
+              <div className="flex items-start justify-between gap-3">
+                <Chip>{p.domain ?? "General"}</Chip>
+                <Badge tone="accent">
+                  {PROJECT_STAGE_LABEL[p.stage as ProjectStage]}
+                </Badge>
+              </div>
+              <h3 className="mt-3 text-base font-semibold tracking-tight leading-snug">
                 {p.title}
               </h3>
               {inst && (
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-1 text-xs text-muted flex items-center gap-1.5">
+                  <BuildingIcon size={12} />
                   {inst.name}
                   {inst.city ? ` · ${inst.city}` : ""}
                 </p>
               )}
-              <div className="mt-3 flex items-center gap-4 text-xs text-muted">
-                <span>{PROJECT_STAGE_LABEL[p.stage as ProjectStage]}</span>
-                <span className="tabular-nums">Progress {p.progress}%</span>
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-[11px] text-muted uppercase tracking-widest mb-1.5">
+                  <span>Progress</span>
+                  <span className="tabular-nums">{p.progress}%</span>
+                </div>
+                <ProgressBar value={p.progress} tone="accent2" />
               </div>
               {p.seeking_support.length > 0 && (
-                <ul className="mt-3 flex flex-wrap gap-1.5">
-                  {p.seeking_support.map((s: string) => (
-                    <li
-                      key={s}
-                      className="border border-border bg-background px-2 py-0.5 text-xs"
-                    >
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {p.seeking_support.slice(0, 3).map((s: string) => (
+                    <Chip key={s}>
                       {SUPPORT_TYPE_LABEL[s as SupportOfferType] ?? s}
-                    </li>
+                    </Chip>
                   ))}
-                </ul>
+                  {p.seeking_support.length > 3 && (
+                    <Chip>+{p.seeking_support.length - 3}</Chip>
+                  )}
+                </div>
               )}
-              <div className="mt-auto pt-4">
+              <div className="mt-5 pt-4 border-t border-[color:var(--border)] flex items-center justify-between">
+                <span className="text-xs text-muted">View project</span>
                 <Link
                   href={`/projects/${p.id}`}
-                  className="text-sm underline underline-offset-4"
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-[color:var(--foreground)] text-[color:var(--background)] group-hover:translate-x-0.5 transition-transform"
+                  aria-label={`Open ${p.title}`}
                 >
-                  View project
+                  <ArrowRightIcon size={14} />
                 </Link>
               </div>
             </Card>
