@@ -11,7 +11,9 @@
     "test:smoke:industry": "node --env-file=.env.local --test scripts/smoke-industry.mjs",
     "test:scraper": "node --env-file=.env.local --test scripts/smoke-scraper.mjs",
     "seed:industry": "node --env-file=.env.local scripts/seed-industry-demo.mjs",
-    "seed:institution": "node --env-file=.env.local scripts/seed-institution-demo.mjs"
+    "seed:institution": "node --env-file=.env.local scripts/seed-institution-demo.mjs",
+    "seed:government": "node --env-file=.env.local scripts/seed-government-demo.mjs",
+    "test:smoke:government": "node --env-file=.env.local --test scripts/smoke-government.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
