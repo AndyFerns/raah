@@ -1,0 +1,38 @@
+venv/
+__pycache__/
+*.pyc
+.env
+
+# Data
+datasets/
+*.csv
+*.json
+*.parquet
+
+# Machine Learning Models
+saved_models/
+*.joblib
+*.pkl
+*.h5
+*.pt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Markdown Reference Files
+*.md
+!README.md
+project_context.txt
