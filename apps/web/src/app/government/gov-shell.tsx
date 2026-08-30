@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   BuildingIcon,
@@ -39,10 +40,14 @@ export function GovShell({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname() ?? "/government";
+  // Full-viewport, no-scroll only on the map root. Inner pages (issue
+  // detail, etc.) use normal document flow so they can scroll.
+  const isMapRoot = /^\/government\/?$/.test(pathname);
 
-  // Lock body scroll while this shell is mounted so the map never causes
-  // page-level scrollbars.
+  // Lock body scroll only on the map route.
   useEffect(() => {
+    if (!isMapRoot) return;
     const html = document.documentElement;
     const body = document.body;
     const prevHtml = html.style.overflow;
@@ -53,7 +58,7 @@ export function GovShell({
       html.style.overflow = prevHtml;
       body.style.overflow = prevBody;
     };
-  }, []);
+  }, [isMapRoot]);
 
   // Close on Escape when the sidebar is open.
   useEffect(() => {
@@ -66,8 +71,10 @@ export function GovShell({
   }, [open]);
 
   return (
-    <div className="gov-shell">
-      <main className="gov-main">{children}</main>
+    <div className={`gov-shell ${isMapRoot ? "gov-shell--map" : "gov-shell--scroll"}`}>
+      <main className={`gov-main ${isMapRoot ? "gov-main--map" : "gov-main--scroll"}`}>
+        {children}
+      </main>
 
       {/* Circular Raah toggle — top-left, always on top */}
       <button
@@ -153,16 +160,27 @@ export function GovShell({
 
       <style>{`
         .gov-shell {
+          background: var(--background);
+        }
+        .gov-shell--map {
           position: fixed;
           inset: 0;
           overflow: hidden;
-          background: var(--background);
+        }
+        .gov-shell--scroll {
+          position: relative;
+          min-height: 100dvh;
         }
 
-        .gov-main {
+        .gov-main--map {
           position: absolute;
           inset: 0;
           overflow: hidden;
+        }
+        .gov-main--scroll {
+          position: relative;
+          min-height: 100dvh;
+          padding-top: 88px; /* clear the floating Raah toggle */
         }
 
         /* -------------------------------------------------------- */
