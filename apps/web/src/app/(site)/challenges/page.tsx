@@ -15,6 +15,7 @@ import {
   MapPinIcon,
   SparkleIcon,
 } from "@/components/icons";
+import { getSession } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Challenges — Raah" };
@@ -77,6 +78,10 @@ type ChallengeRow = {
 
 export default async function ChallengesPage() {
   const supabase = await createSupabaseServerClient();
+  const session = await getSession();
+  const isGovernment =
+    session?.profile.role === "government" || session?.isPlatformAdmin === true;
+  const detailBase = isGovernment ? "/government/issues" : "/challenges";
   const { data, error } = await supabase
     .from("issues")
     .select(
@@ -160,7 +165,7 @@ export default async function ChallengesPage() {
       {rows.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rows.map((r) => (
-            <ChallengeCard key={r.id} row={r} />
+            <ChallengeCard key={r.id} row={r} detailBase={detailBase} />
           ))}
         </div>
       )}
@@ -168,7 +173,13 @@ export default async function ChallengesPage() {
   );
 }
 
-function ChallengeCard({ row }: { row: ChallengeRow }) {
+function ChallengeCard({
+  row,
+  detailBase,
+}: {
+  row: ChallengeRow;
+  detailBase: string;
+}) {
   const images = (row.issue_media ?? []).filter((m) => m.type === "image");
   const cover = images[0];
   const tone = STATUS_TONE[row.status] ?? "neutral";
@@ -176,7 +187,7 @@ function ChallengeCard({ row }: { row: ChallengeRow }) {
   return (
     <Card interactive className="p-0 overflow-hidden flex flex-col group">
       <Link
-        href={`/challenges/${row.id}`}
+        href={`${detailBase}/${row.id}`}
         className="flex flex-col h-full focus-visible:outline-none"
       >
         <div className="relative aspect-[16/10] bg-[color:var(--surface-inset)]">
