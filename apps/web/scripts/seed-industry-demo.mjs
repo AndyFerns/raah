@@ -190,6 +190,17 @@ const DEMO_MEDIA = {
 };
 
 async function seedDemoMedia() {
+  // Probe: if the project_media table isn't in the schema (migration 0006
+  // hasn't been applied), skip silently so the rest of the seed still runs.
+  const probe = await admin.from("project_media").select("id").limit(1);
+  if (probe.error) {
+    console.warn(
+      `Skipping demo media: ${probe.error.message}. ` +
+        `Apply supabase/migrations/0006_project_media.sql to enable it.`,
+    );
+    return 0;
+  }
+
   const { data: projs } = await admin
     .from("projects")
     .select("id, domain, title")
@@ -214,7 +225,10 @@ async function seedDemoMedia() {
       ord: i + 1,
     }));
     const { error } = await admin.from("project_media").insert(rows);
-    if (error) throw error;
+    if (error) {
+      console.warn(`Skipping demo media for ${p.title}: ${error.message}`);
+      continue;
+    }
     inserted += rows.length;
   }
   return inserted;
