@@ -8,22 +8,14 @@ export const metadata = { title: "Government Dashboard — Raah" };
 
 export default async function GovernmentPage() {
   /* ── Auth gate ─────────────────────────────────────────────── */
-  console.log("[GOV DASHBOARD] Checking session...");
-  // const session = await getSession();
-  // if (!session) {
-  //   console.log("[GOV DASHBOARD] No session found. Redirecting to sign-in.");
-  //   redirect("/auth/sign-in");
-  // }
-
-  // const role = session.profile.role;
-  // console.log(`[GOV DASHBOARD] Session found. User role: ${role}, Admin: ${session.isPlatformAdmin}`);
-  
-  // if (role !== "government" && role !== "admin" && !session.isPlatformAdmin) {
-  //   console.log(`[GOV DASHBOARD] Access denied for role: ${role}. Redirecting to home.`);
-  //   redirect("/");
-  // }
-  
-  console.log("[GOV DASHBOARD] Access granted (BYPASSED). Fetching issues...");
+  const session = await getSession();
+  if (!session) {
+    redirect("/auth/sign-in?next=/government");
+  }
+  const role = session.profile.role;
+  if (role !== "government" && !session.isPlatformAdmin) {
+    redirect("/account");
+  }
 
   /* ── Fetch issues with media ───────────────────────────────── */
   const supabase = await createSupabaseServerClient();

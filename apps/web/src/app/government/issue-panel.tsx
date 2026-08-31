@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useState, useRef } from "react";
 import type { IssueWithMedia, IssueStatus } from "./types";
 import { STATUS_COLOR, STATUS_LABEL, CATEGORY_LABEL } from "./types";
@@ -206,8 +207,15 @@ export function IssuePanel({
                 </div>
               )}
 
-              {/* Title */}
-              <h2 className="issue-panel-title">{issue.title}</h2>
+              {/* Title (clickable → dedicated detail page) */}
+              <h2 className="issue-panel-title">
+                <Link
+                  href={`/government/issues/${issue.id}`}
+                  className="issue-panel-title-link"
+                >
+                  {issue.title}
+                </Link>
+              </h2>
 
               {/* Status + Category badges */}
               <div className="issue-panel-badges">
@@ -428,23 +436,25 @@ export function IssuePanel({
       </div>
 
       <style>{`
-        /* ── Panel container ───────────────────────────────────── */
+        /* ── Panel container (themed via RAAH tokens) ──────────── */
         .issue-panel {
           width: 0;
           min-width: 0;
           overflow: hidden;
-          background: #0f1421;
-          border-left: 1px solid rgba(255,255,255,0.06);
+          background: var(--surface);
+          border-left: 1px solid var(--border);
           display: flex;
           flex-direction: column;
-          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                      min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          transition:
+            width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+            min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           flex-shrink: 0;
+          box-shadow: var(--shadow-lg);
         }
 
         .issue-panel--open {
-          width: 400px;
-          min-width: 400px;
+          width: 420px;
+          min-width: 420px;
         }
 
         @media (max-width: 768px) {
@@ -467,16 +477,16 @@ export function IssuePanel({
           align-items: center;
           justify-content: center;
           padding: 32px;
-          min-width: 400px;
+          min-width: 420px;
         }
 
         .issue-panel-empty-icon {
-          color: #334155;
+          color: var(--muted-2);
           margin-bottom: 16px;
         }
 
         .issue-panel-empty-text {
-          color: #475569;
+          color: var(--muted);
           font-size: 13px;
           text-align: center;
           line-height: 1.5;
@@ -487,56 +497,60 @@ export function IssuePanel({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 12px 16px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          padding: 14px 18px;
+          border-bottom: 1px solid var(--border);
           flex-shrink: 0;
-          min-width: 400px;
+          min-width: 420px;
         }
 
         .issue-panel-header-label {
           font-size: 11px;
           font-weight: 600;
-          color: #64748b;
+          color: var(--muted);
           text-transform: uppercase;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.14em;
         }
 
         .issue-panel-close {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 28px;
-          height: 28px;
-          border: none;
-          background: rgba(255,255,255,0.05);
-          border-radius: 4px;
-          color: #94a3b8;
+          width: 32px;
+          height: 32px;
+          border: 1px solid var(--border);
+          background: var(--surface);
+          border-radius: 999px;
+          color: var(--muted);
           cursor: pointer;
-          transition: background 0.15s;
+          transition: background 0.15s, color 0.15s, transform 0.15s;
         }
 
         .issue-panel-close:hover {
-          background: rgba(255,255,255,0.1);
-          color: #e2e8f0;
+          background: var(--surface-2);
+          color: var(--foreground);
+        }
+        .issue-panel-close:active {
+          transform: scale(0.96);
         }
 
         /* ── Scrollable body ───────────────────────────────────── */
         .issue-panel-body {
           flex: 1;
           overflow-y: auto;
-          padding: 16px;
-          min-width: 400px;
+          overscroll-behavior: contain;
+          padding: 18px;
+          min-width: 420px;
         }
 
         .issue-panel-body::-webkit-scrollbar {
-          width: 4px;
+          width: 6px;
         }
         .issue-panel-body::-webkit-scrollbar-track {
           background: transparent;
         }
         .issue-panel-body::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.1);
-          border-radius: 2px;
+          background: var(--border-strong);
+          border-radius: 999px;
         }
 
         /* ── Media ─────────────────────────────────────────────── */
@@ -544,16 +558,16 @@ export function IssuePanel({
           display: flex;
           gap: 8px;
           overflow-x: auto;
-          margin-bottom: 16px;
+          margin-bottom: 18px;
           padding-bottom: 4px;
         }
 
         .issue-panel-media-img {
           width: 100%;
-          max-height: 200px;
+          max-height: 220px;
           object-fit: cover;
-          border-radius: 4px;
-          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 14px;
+          border: 1px solid var(--border);
           flex-shrink: 0;
         }
 
@@ -562,17 +576,36 @@ export function IssuePanel({
         }
 
         .issue-panel-media-img:not(:only-child) {
-          width: 160px;
-          height: 120px;
+          width: 180px;
+          height: 130px;
         }
 
         /* ── Title ─────────────────────────────────────────────── */
         .issue-panel-title {
-          font-size: 17px;
+          font-size: 18px;
           font-weight: 600;
-          color: #e2e8f0;
+          color: var(--foreground);
           line-height: 1.35;
+          letter-spacing: -0.01em;
           margin: 0 0 12px 0;
+        }
+        .issue-panel-title-link {
+          color: inherit;
+          text-decoration: none;
+          background-image: linear-gradient(var(--accent), var(--accent));
+          background-repeat: no-repeat;
+          background-position: 0 100%;
+          background-size: 0 1px;
+          transition: background-size 200ms ease, color 150ms ease;
+        }
+        .issue-panel-title-link:hover {
+          color: var(--accent);
+          background-size: 100% 1px;
+        }
+        .issue-panel-title-link:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 3px;
+          border-radius: 4px;
         }
 
         /* ── Badges ────────────────────────────────────────────── */
@@ -580,28 +613,28 @@ export function IssuePanel({
           display: flex;
           gap: 8px;
           flex-wrap: wrap;
-          margin-bottom: 16px;
+          margin-bottom: 18px;
         }
 
         .issue-panel-badge {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          height: 24px;
-          padding: 0 10px;
+          height: 26px;
+          padding: 0 12px;
           font-size: 11px;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.06em;
           border: 1px solid;
-          border-radius: 3px;
+          border-radius: 999px;
           white-space: nowrap;
         }
 
         .issue-panel-badge--muted {
-          border-color: rgba(255,255,255,0.12);
-          color: #94a3b8;
-          background: rgba(255,255,255,0.04);
+          border-color: var(--border);
+          color: var(--muted);
+          background: var(--surface-2);
         }
 
         .issue-panel-badge-dot {
@@ -613,36 +646,40 @@ export function IssuePanel({
 
         /* ── Sections ──────────────────────────────────────────── */
         .issue-panel-section {
-          padding: 12px 0;
-          border-top: 1px solid rgba(255,255,255,0.05);
+          padding: 14px 0;
+          border-top: 1px solid var(--border);
         }
 
         .issue-panel-section-label {
           display: block;
           font-size: 10px;
           font-weight: 600;
-          color: #475569;
+          color: var(--muted-2);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          margin-bottom: 6px;
+          letter-spacing: 0.14em;
+          margin-bottom: 8px;
         }
 
         .issue-panel-description {
-          font-size: 13px;
-          line-height: 1.6;
-          color: #94a3b8;
+          font-size: 14px;
+          line-height: 1.65;
+          color: var(--foreground);
           margin: 0;
+          padding: 14px 16px;
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          border-radius: 14px;
         }
 
         .issue-panel-location-name {
           font-size: 13px;
-          color: #cbd5e1;
-          margin: 0 0 2px 0;
+          color: var(--foreground);
+          margin: 0 0 4px 0;
         }
 
         .issue-panel-coords {
           font-size: 11px;
-          color: #475569;
+          color: var(--muted-2);
           font-family: var(--font-mono);
           margin: 0;
         }
@@ -651,11 +688,7 @@ export function IssuePanel({
         .issue-panel-meta-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 1px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 4px;
-          overflow: hidden;
+          gap: 8px;
           margin-bottom: 4px;
         }
 
@@ -663,23 +696,25 @@ export function IssuePanel({
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 12px 8px;
-          background: #0f1421;
+          padding: 14px 8px;
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          border-radius: 14px;
         }
 
         .issue-panel-meta-value {
-          font-size: 15px;
+          font-size: 18px;
           font-weight: 600;
-          color: #e2e8f0;
+          color: var(--foreground);
           font-variant-numeric: tabular-nums;
         }
 
         .issue-panel-meta-label {
           font-size: 10px;
-          color: #475569;
+          color: var(--muted-2);
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          margin-top: 2px;
+          letter-spacing: 0.12em;
+          margin-top: 4px;
         }
 
         /* ── Timeline rows ─────────────────────────────────────── */
@@ -687,24 +722,24 @@ export function IssuePanel({
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 4px 0;
+          padding: 6px 0;
         }
 
         .issue-panel-timeline-label {
           font-size: 12px;
-          color: #64748b;
+          color: var(--muted);
         }
 
         .issue-panel-timeline-value {
           font-size: 12px;
-          color: #94a3b8;
+          color: var(--foreground);
           font-variant-numeric: tabular-nums;
         }
 
         /* ── ID ────────────────────────────────────────────────── */
         .issue-panel-id {
           font-size: 11px;
-          color: #475569;
+          color: var(--muted-2);
           font-family: var(--font-mono);
           margin: 0;
           word-break: break-all;
@@ -712,20 +747,20 @@ export function IssuePanel({
 
         /* ── Footer / Actions ──────────────────────────────────── */
         .issue-panel-footer {
-          padding: 16px;
-          border-top: 1px solid rgba(255,255,255,0.06);
+          padding: 16px 18px;
+          border-top: 1px solid var(--border);
           flex-shrink: 0;
-          min-width: 400px;
-          background: #0f1421;
+          min-width: 420px;
+          background: var(--surface);
         }
 
         .issue-panel-action-btn {
           width: 100%;
-          height: 38px;
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 4px;
-          background: rgba(255,255,255,0.04);
-          color: #94a3b8;
+          height: 42px;
+          border: 1px solid var(--border);
+          border-radius: 999px;
+          background: var(--surface-2);
+          color: var(--muted);
           font-size: 13px;
           font-weight: 500;
           cursor: pointer;
@@ -738,20 +773,20 @@ export function IssuePanel({
         }
 
         .issue-panel-action-btn--primary {
-          background: #3b82f6;
-          border-color: #2563eb;
-          color: white;
+          background: var(--foreground);
+          border-color: var(--foreground);
+          color: var(--background);
         }
 
         .issue-panel-action-btn--primary:hover:not(:disabled) {
-          background: #2563eb;
+          opacity: 0.9;
         }
 
         .issue-panel-action-hint {
           display: block;
           text-align: center;
           font-size: 11px;
-          color: #64748b;
+          color: var(--muted);
           margin-top: 8px;
         }
 
@@ -771,29 +806,29 @@ export function IssuePanel({
         .issue-update-title {
           font-size: 13px;
           font-weight: 600;
-          color: #e2e8f0;
+          color: var(--foreground);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.08em;
         }
 
         .issue-update-cancel {
           background: transparent;
           border: none;
-          color: #94a3b8;
+          color: var(--muted);
           font-size: 12px;
           cursor: pointer;
         }
 
         .issue-update-cancel:hover:not(:disabled) {
-          color: #e2e8f0;
+          color: var(--foreground);
         }
 
         .issue-update-error {
-          padding: 8px 12px;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.2);
-          border-radius: 4px;
-          color: #fca5a5;
+          padding: 10px 14px;
+          background: var(--danger-soft);
+          border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+          border-radius: 12px;
+          color: var(--danger);
           font-size: 12px;
           line-height: 1.4;
         }
@@ -806,28 +841,28 @@ export function IssuePanel({
 
         .issue-update-field label {
           font-size: 12px;
-          color: #cbd5e1;
+          color: var(--foreground);
           font-weight: 500;
         }
 
         .issue-update-field label span {
-          color: #ef4444;
+          color: var(--danger);
           font-size: 11px;
         }
 
         .issue-update-select {
-          height: 38px;
-          background: rgba(0,0,0,0.2);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 4px;
-          color: white;
+          height: 40px;
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          color: var(--foreground);
           padding: 0 12px;
           font-size: 13px;
           outline: none;
         }
 
         .issue-update-select:focus {
-          border-color: #3b82f6;
+          border-color: var(--accent);
         }
 
         .issue-update-files {
@@ -838,11 +873,11 @@ export function IssuePanel({
 
         .issue-update-file-preview {
           position: relative;
-          width: 60px;
-          height: 60px;
-          border-radius: 4px;
+          width: 64px;
+          height: 64px;
+          border-radius: 12px;
           overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--border);
         }
 
         .issue-update-file-preview img {
@@ -853,12 +888,12 @@ export function IssuePanel({
 
         .issue-update-file-remove {
           position: absolute;
-          top: 2px;
-          right: 2px;
-          width: 16px;
-          height: 16px;
+          top: 3px;
+          right: 3px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
-          background: rgba(0,0,0,0.7);
+          background: rgba(0,0,0,0.65);
           color: white;
           border: none;
           font-size: 12px;
@@ -870,12 +905,12 @@ export function IssuePanel({
         }
 
         .issue-update-file-add {
-          width: 60px;
-          height: 60px;
-          border-radius: 4px;
-          background: rgba(255,255,255,0.05);
-          border: 1px dashed rgba(255,255,255,0.2);
-          color: #94a3b8;
+          width: 64px;
+          height: 64px;
+          border-radius: 12px;
+          background: var(--surface-2);
+          border: 1px dashed var(--border-strong);
+          color: var(--muted);
           font-size: 10px;
           display: flex;
           flex-direction: column;
@@ -885,9 +920,9 @@ export function IssuePanel({
         }
 
         .issue-update-file-add:hover:not(:disabled) {
-          background: rgba(255,255,255,0.1);
-          color: #e2e8f0;
-          border-color: rgba(255,255,255,0.3);
+          background: var(--surface-3);
+          color: var(--foreground);
+          border-color: var(--accent);
         }
 
         .issue-update-submit {

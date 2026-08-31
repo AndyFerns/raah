@@ -24,6 +24,7 @@ function dashboardHref(session: {
   if (session.isPlatformAdmin) return "/admin";
   if (session.profile.role === "institution") return "/institution";
   if (INDUSTRY_ROLES.has(session.profile.role)) return "/industry";
+  if (session.profile.role === "government") return "/government";
   return "/account";
 }
 
