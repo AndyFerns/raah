@@ -2,7 +2,7 @@
 
 A public-interest platform connecting citizens, academic institutions, industry, and the Government of Jharkhand to identify, fund, and solve societal challenges together.
 
-Raah (रास्ता — meaning "path" or "way") is built as a serious institutional tool: no growth hacks, no engagement loops. It exists to reduce the friction between a problem a district faces and the expertise that can solve it.
+Raah (रास्ता — meaning "path" or "way") is built as a serious institutional tool: no growth hacks, no engagement loops. It exists to reduce the friction between a problem a district faces, the expertise an institution can offer, and the resources an industry can deploy.
 
 ---
 
@@ -71,9 +71,19 @@ raah/
 │       ├── next.config.ts
 │       ├── postcss.config.mjs
 │       └── tsconfig.json
+├── Recurring model/                # ML models and data processing pipelines
+│   ├── ml_pipeline/                # Teacher-student model training pipeline
+│   ├── unify/                      # Data standardization and normalization module
+│   ├── audit/                      # Validation and reporting module
+│   ├── run_ml_pipeline.py          # ML pipeline execution script
+│   ├── run_unify_pipeline.py       # Data unification execution script
+│   └── .gitignore
+├── services/                       # Microservices and backend services
 ├── supabase/
 │   └── migrations/
 │       └── 0001_raah_init.sql      # Full schema, RLS, triggers, storage bucket
+├── docs/                           # Documentation
+│   └── industry-user-flow.md       # Industry user flow documentation
 ├── package.json                    # Monorepo root (pnpm workspaces)
 ├── pnpm-lock.yaml
 └── pnpm-workspace.yaml
@@ -94,6 +104,7 @@ raah/
 | Package manager | pnpm 11 | Monorepo via `pnpm-workspace.yaml` |
 | Language | TypeScript 5 | Strict mode |
 | Compiler | React Compiler (babel-plugin-react-compiler) | Enabled in `next.config.ts` |
+| ML Pipeline | Python 3.8+ | Teacher-student model training and data standardization |
 
 ---
 
@@ -110,7 +121,20 @@ Key tables:
 - `faculty` + `faculty_verifications` — faculty records and token-based affiliation verification
 - `institution_verifications` + `verification_documents` — admin review workflow
 
-Row Level Security is enforced on every table. Helper functions `is_platform_admin()` and `is_institution_admin(institution_id)` are defined as `SECURITY DEFINER` so they cannot be bypassed by client code.
+Row Level Security is enforced on every table. Helper functions `is_platform_admin()` and `is_institution_admin(institution_id)` are defined as `SECURITY DEFINER` so they cannot be bypassed by clients.
+
+---
+
+## ML Models & Data Processing
+
+### ML Pipeline (`Recurring model/ml_pipeline/`)
+Implements teacher-student model training for efficient inference. Used for matching institutions to challenges and projects. Run via `Recurring model/run_ml_pipeline.py`.
+
+### Data Unification (`Recurring model/unify/`)
+Standardizes and normalizes data from diverse sources to ensure consistency across the platform. Run via `Recurring model/run_unify_pipeline.py`.
+
+### Audit Module (`Recurring model/audit/`)
+Provides validation and reporting utilities for model performance, data quality, and system health.
 
 ---
 
@@ -136,6 +160,7 @@ ML_SERVICE_URL=                  # Future matching service (optional, stub)
 
 - Node.js 20+
 - pnpm 11 (`npm i -g pnpm` or it is auto-downloaded via `devEngines`)
+- Python 3.8+ (for ML models)
 - A Supabase project (free tier is fine for development)
 
 ### 1. Install dependencies
@@ -181,6 +206,20 @@ pnpm --filter web dev
 
 The app will be at `http://localhost:3000`.
 
+### 7. Run ML pipelines (optional)
+
+For data unification:
+```bash
+cd "Recurring model"
+python run_unify_pipeline.py
+```
+
+For ML training:
+```bash
+cd "Recurring model"
+python run_ml_pipeline.py
+```
+
 ---
 
 ## Building for production
@@ -201,7 +240,7 @@ The build outputs 22 static/server routes. There are no environment-specific cod
 
 ## Design system
 
-Design tokens are defined as CSS custom properties in [`apps/web/src/app/globals.css`](apps/web/src/app/globals.css) and mirrored as plain TypeScript constants in [`apps/web/src/lib/design-tokens.ts`](apps/web/src/lib/design-tokens.ts) so a future React Native / Expo app can import them directly without duplicating values.
+Design tokens are defined as CSS custom properties in [`apps/web/src/app/globals.css`](apps/web/src/app/globals.css) and mirrored as plain TypeScript constants in [`apps/web/src/lib/design-tokens.ts`](apps/web/src/lib/design-tokens.ts).
 
 Palette summary (warm ivory + terracotta + sage):
 
@@ -225,6 +264,9 @@ Palette summary (warm ivory + terracotta + sage):
 | Industry portal | `/industry/*` | Stub — assign to teammate |
 | Government portal | `/government/*` | Stub — assign to teammate |
 | ML matching | `lib/matching.ts` | Stub — `getInstitutionRecommendations()` returns `[]` |
+| ML Pipeline | `Recurring model/ml_pipeline/` | In Progress |
+| Data Unification | `Recurring model/unify/` | In Progress |
+| Audit & Validation | `Recurring model/audit/` | In Progress |
 
 Stubs are rendered via the shared `ModuleStub` component in [`apps/web/src/app/(site)/_stub.tsx`](apps/web/src/app/(site)/_stub.tsx).
 
